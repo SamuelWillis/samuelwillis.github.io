@@ -1,0 +1,55 @@
+theme = "hermit"
+languageCode = "en-us"
+baseURL = "https://www.samuelwillis.dev"
+
+pygmentsCodefences  = true
+pygmentsUseClasses  = true
+
+title = "samuel willis"
+rssLimit = 10
+enableEmoji = true
+
+[author]
+  name = "Samuel Willis"
+
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
+[params]
+  dateform        = "Jan 2, 2006"
+  dateformShort   = "Jan 2"
+  dateformNum     = "2006-01-02"
+  dateformNumTime = "2006-01-02 15:04 -0700"
+
+  homeSubtitle = "software developer"
+
+  justifyContent = false
+
+  relatedPosts = false
+
+  code_copy_button = true
+
+  [[params.social]]
+    name = "email"
+    url = "mailto:samuel.w.h.willis@gmail.com"
+
+  [[params.social]]
+    name = "github"
+    url = "https://github.com/SamuelWillis"
+
+  [[params.social]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/in/willissamuel/"
+
+[menu]
+
+  [[menu.main]]
+    name = "about"
+    url = "about/"
+    weight = 10
+
+  [[menu.main]]
+    name = "posts"
+    url = "posts/"
+    weight = 20
