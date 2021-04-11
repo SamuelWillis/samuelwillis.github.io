@@ -1,0 +1,7 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 11 Apr 2021 14:34:21 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Hello World</title><link>https://www.samuelwillis.dev/posts/hello-world/</link><pubDate>Sun, 11 Apr 2021 14:34:21 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/hello-world/</guid><description>Welcome to my blog, where I aim to document (re)learning core developer ideas.
+Much of it will be done in the functional language Elixir
+I hope you find something useful here.</description><content type="html"><![CDATA[<p>Welcome to my blog, where I aim to document (re)learning core developer ideas.</p>
+<p>Much of it will be done in the functional language
+<a href="https://elixir-lang.org/">Elixir</a></p>
+<p>I hope you find something useful here.</p>
+]]></content></item></channel></rss>
