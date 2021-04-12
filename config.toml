@@ -1,6 +1,7 @@
 theme = "hermit"
 languageCode = "en-us"
 baseURL = "https://www.samuelwillis.dev"
+googleAnalytics = "UA-194304466-1"
 
 pygmentsCodefences  = true
 pygmentsUseClasses  = true
