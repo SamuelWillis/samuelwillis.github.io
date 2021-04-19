@@ -1,4 +1,165 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 11 Apr 2021 15:12:45 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Stacks in Elixir</title><link>https://www.samuelwillis.dev/posts/stacks-in-elixir/</link><pubDate>Sun, 11 Apr 2021 15:12:45 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/stacks-in-elixir/</guid><description>Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 13 Apr 2021 18:36:07 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Queues in Elixir</title><link>https://www.samuelwillis.dev/posts/queues-in-elixir/</link><pubDate>Tue, 13 Apr 2021 18:36:07 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/queues-in-elixir/</guid><description>Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
+Queues operate on a First In First out (FIFO) policy, meaning the first item placed onto the queue is the first to be removed.
+These are again essentially sugar for lists but there&amp;rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir.</description><content type="html"><![CDATA[<p>Continuing on from my previous <a href="https://www.samuelwillis.dev/posts/stacks-in-elixir/">Stacks in Elixir</a> post
+today I will cover implementing Queues in Elixir.</p>
+<p>Queues operate on a First In First out (FIFO) policy, meaning the first item
+placed onto the queue is the first to be removed.</p>
+<p>These are again essentially sugar for lists but there&rsquo;s a few gotchas to get
+around when implementing them in Elixir.
+The main being that appending to lists can be an expensive operation in Elixir.</p>
+<p>But first, the queue operations.</p>
+<h2 id="operations">Operations</h2>
+<p>Formally, all the operations for Queues are:</p>
+<pre><code>Enqueue(Q, x)
+  if Queue-Full(Q) throw Overflow Error
+
+  Q[Q.tail] = x
+  if Q.tail == Q.length -1
+    Q = 0
+  else Q.tail++
+  return x
+
+Dequeue(Q)
+  if Queue-Empty(Q) throw Underflow Error
+
+  x = Q[Q.head]
+  if Q.head == Q.length - 1
+    Q.head = 0
+  else Q.head++
+  return x
+
+Queue-Empty(Q)
+  return Q.tail == Q.head
+
+Queue-Full(Q)
+  if Q.head = Q.tail + 1 OR (Q.tail = Q.length - 1 AND Q.head = 0)
+    return true
+  else
+    return false
+</code></pre><p>This implementation will omit the full operation as a list will be used to store
+the items on the queue and they do not require manual resizing, unlike arrays
+would.</p>
+<h2 id="implementation">Implementation</h2>
+<p>The implementation will again use a list to store the items in the queue.</p>
+<p>Normally when adding an item to the queue it would be added to the back.
+This would require appending to a list and in Elixir, that can be very
+expensive.
+Appending the new item would be possible but is <a href="https://hexdocs.pm/elixir/Kernel.html#++/2">warned
+against</a>.
+The official suggestion is to prepend and then reverse the list.</p>
+<p>This implementation will follow the documentation&rsquo;s advice and prepend any new
+items to the queue.
+Then to dequeue it will reverse the elements and return the last one.</p>
+<p>I admit this is probably overkill and appending would probably be fine but I
+wanted to write my own reverse function to practice my Elixir.</p>
+<p>In practice, appending would likely be fine unless the Queue was expected to be
+extremely large and then using the
+<a href="https://hexdocs.pm/elixir/Enum.html#reverse/1"><code>Enum.reverse</code></a> built in functions
+would be better than rolling my own as it leverages the highly optimized
+<code>:list.reverse</code>
+from Erlang.</p>
+<h3 id="set-up">Set up</h3>
+<p>As in the <a href="https://www.samuelwillis.dev/posts/stacks-in-elixir/#implementation">Stack implementation</a> a struct will be used to represent
+the Queue.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Queue</span> <span class="k">do</span>
+  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Queue implementation.
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="kd">defstruct</span> <span class="ss">elements</span><span class="p">:</span> <span class="p">[]</span>
+
+  <span class="na">@typep</span> <span class="n">t</span> <span class="o">::</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+           <span class="ss">elements</span><span class="p">:</span> <span class="p">[</span><span class="n">any</span><span class="p">()]</span>
+         <span class="p">}</span>
+<span class="k">end</span>
+</code></pre></div><h3 id="enqueue">Enqueue</h3>
+<p>Because this implementation places the new items at the front of the list of
+elements the enqueue implementation is quite simple.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Add an item into a queue.
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">   iex&gt; Queue.enqueue(%Queue{elements: []}, &#34;one&#34;)
+</span><span class="sh">    %Queue{elements: [&#34;one&#34;]}
+</span><span class="sh">
+</span><span class="sh">    iex&gt; Queue.enqueue(%Queue{elements: [&#34;one&#34;]}, &#34;two&#34;)
+</span><span class="sh">    %Queue{elements: [&#34;two&#34;, &#34;one&#34;]}
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="kd">def</span> <span class="n">enqueue</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span> <span class="o">=</span> <span class="n">queue</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">do</span>
+    <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+      <span class="n">queue</span>
+      <span class="o">|</span> <span class="ss">elements</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span> <span class="o">|</span> <span class="n">queue</span><span class="o">.</span><span class="n">elements</span><span class="p">]</span>
+    <span class="p">}</span>
+  <span class="k">end</span>
+</code></pre></div><h4 id="dequeue">Dequeue</h4>
+<p>Dequeueing is a little trickier as the list of elements will have the oldest
+item at the end of the list.</p>
+<p>As mentioned in the <a href="https://www.samuelwillis.dev/posts/queues-in-elixir/#implementation">Implementation Section</a> some list reversals will need to be
+performed.</p>
+<p>There are two reversals total, the first is to get the oldest item, the second
+is to put the list back into the &ldquo;correct&rdquo; order.</p>
+<p>In the case we dequeue an item, a tuple is returned consisting of the <code>:ok</code>
+atom, the item, and the queue with the list of elements omitting the dequeued
+item.</p>
+<p>If the list of elements is empty a <code>{:error, &quot;Empty Queue&quot;}</code> tuple is returned.</p>
+<p>Putting it together it looks as follows:</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Remove an item from the queue.
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">    iex&gt; Queue.dequeue(%Queue{elements: [&#34;first&#34;]})
+</span><span class="sh">    {:ok, &#34;first&#34;, %Queue{elements: []}
+</span><span class="sh">
+</span><span class="sh">    iex&gt; Queue.dequeue(%Queue{elements: [&#34;third&#34;, &#34;second&#34;, &#34;first&#34;]})
+</span><span class="sh">    {:ok, &#34;first&#34;, %Queue{elements: [&#34;third&#34;, &#34;second&#34;]}}
+</span><span class="sh">
+</span><span class="sh">    iex&gt; Queue.dequeue(%Queue{elements: []})
+</span><span class="sh">    {:error, &#34;Empty Queue&#34;}
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="kd">def</span> <span class="n">dequeue</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">elements</span><span class="p">:</span> <span class="p">[]}),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="ss">:error</span><span class="p">,</span> <span class="s2">&#34;Empty Queue&#34;</span><span class="p">}</span>
+
+  <span class="c1"># Reverses the list of elements and grabs the &#34;first&#34; queued element and the</span>
+  <span class="c1"># remainder of the elements. Then reverses the remainder to place them back</span>
+  <span class="c1"># into their correct order</span>
+  <span class="kd">def</span> <span class="n">dequeue</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">elements</span><span class="p">:</span> <span class="n">elements</span><span class="p">})</span> <span class="k">do</span>
+    <span class="p">[</span><span class="n">item</span> <span class="o">|</span> <span class="n">elements</span><span class="p">]</span> <span class="o">=</span> <span class="n">reverse_elements</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+
+    <span class="p">{</span><span class="ss">:ok</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span>
+     <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+       <span class="ss">elements</span><span class="p">:</span> <span class="n">reverse_elements</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+     <span class="p">}}</span>
+  <span class="k">end</span>
+</code></pre></div><h3 id="empty">Empty</h3>
+<p>The empty operation is quite simple using pattern matching.</p>
+<p>If the Stack&rsquo;s elements matches a non empty list, we return <code>false</code>.
+Otherwise, return <code>true</code>.
+The <a href="https://hexdocs.pm/elixir/master/naming-conventions.html#trailing-question-mark-foo">trailing question
+mark</a>
+naming convention is used in the implementation.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Check the if queue is empty
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">    iex&gt; Queue.empty?(%Queue{elements: [&#34;item one&#34;]})
+</span><span class="sh">    false
+</span><span class="sh">
+</span><span class="sh">    iex&gt; Queue.empty?(%Queue{elements: []})
+</span><span class="sh">    true
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="kd">def</span> <span class="n">empty?</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">elements</span><span class="p">:</span> <span class="p">[</span><span class="n">_head</span> <span class="o">|</span> <span class="n">_tail</span><span class="p">]}),</span> <span class="ss">do</span><span class="p">:</span> <span class="no">false</span>
+  <span class="kd">def</span> <span class="n">empty?</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">elements</span><span class="p">:</span> <span class="p">[]}),</span> <span class="ss">do</span><span class="p">:</span> <span class="no">true</span>
+</code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>Implementing a simple Queue is a fairly easy task in Elixir.
+It could be made even simpler if
+<a href="https://hexdocs.pm/elixir/Kernel.html#++/2">Kernel.++/2</a> was used to append the
+new items to the back of the list of elements.</p>
+<p>As it stands, implementing a simple Queue was a great way to get familiar with
+Elixir&rsquo;s lists and their limitations as well as start digging into idiomatic
+ways to handle lists.</p>
+<p><a href="https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/queue.ex">Click for the full
+implementation</a>.</p>
+<p><a href="https://github.com/SamuelWillis/algorithms/tree/main/notes/data-structures/queue">And here is my full set of Queue
+notes</a>.</p>
+]]></content></item><item><title>Stacks in Elixir</title><link>https://www.samuelwillis.dev/posts/stacks-in-elixir/</link><pubDate>Sun, 11 Apr 2021 15:12:45 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/stacks-in-elixir/</guid><description>Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
 They operate under the Last In First Out (LIFO) policy, meaning the last object placed onto the stack is the first one to be removed from it.
 In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching.</description><content type="html"><![CDATA[<p>Stacks are one of the most basic data structures in Computer Science.
 Nonetheless, they are quite useful and used often.</p>
