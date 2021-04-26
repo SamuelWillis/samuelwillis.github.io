@@ -1,4 +1,137 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 13 Apr 2021 18:36:07 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Queues in Elixir</title><link>https://www.samuelwillis.dev/posts/queues-in-elixir/</link><pubDate>Tue, 13 Apr 2021 18:36:07 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/queues-in-elixir/</guid><description>Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 24 Apr 2021 12:59:20 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Insertion Sort in Elixir</title><link>https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/</link><pubDate>Sat, 24 Apr 2021 12:59:20 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/</guid><description>Departing from Data Structures such as Queues and Stacks this post will cover the insertion sort algorithm in Elixir.
+Insertion sort is one of the first sorting algorithms introduced in Computer Science as its quite simple.
+Insertion sort is quite efficient on small data sets and it does the sort in place. Meaning it has O(1) (constant) memory space requirements. Unfortunately, this does not hold true in Elixir as recursion is used causing the space-complexity to be O(n) (linear).</description><content type="html"><![CDATA[<p>Departing from Data Structures such as <a href="https://www.samuelwillis.dev/posts/queues-in-elixir/">Queues</a>
+and <a href="https://www.samuelwillis.dev/posts/stacks-in-elixir/">Stacks</a> this post will cover the insertion
+sort algorithm in Elixir.</p>
+<p>Insertion sort is one of the first sorting algorithms introduced in Computer
+Science as its quite simple.</p>
+<p>Insertion sort is quite efficient on small data sets and it does the sort in
+place.
+Meaning it has <code>O(1)</code> (constant) memory space requirements.
+Unfortunately, this does not hold true in Elixir as recursion is used causing
+the space-complexity to be <code>O(n)</code> (linear).</p>
+<h2 id="method">Method</h2>
+<p>In insertion sort, the array into is split into two &ldquo;piles&rdquo;.</p>
+<p>On the left pile are the sorted elements and on the right pile are the unsorted.</p>
+<p>For each element on the right (unsorted), we compare it to elements in the left
+(sorted) pile until the element from the right pile is in its sorted position in
+the array.</p>
+<p>If the left hand element is larger than the right hand element, we move the left
+hand element to the &ldquo;right&rdquo; one position and repeat.</p>
+<p>If the left hand element is less than or equal to the right hand element, we
+place the right hand element into the position to the &ldquo;right&rdquo; of the current
+left hand position.</p>
+<h2 id="code">Code</h2>
+<p>In imperative languages, insertion sort is most commonly implemented using for
+loops and while loops.</p>
+<p>Elixir does not have loops, which can be a little tricky to navigate when you
+first start learning Elixir.</p>
+<p>Instead of loops, Elixir provides pattern matching and recursion.</p>
+<p>Placing the insertion sort implementation into a module, the setup will be as
+follows:</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.Sorting.InsertionSort</span> <span class="k">do</span>
+  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Simple insertion sort implementation
+</span><span class="sh">  &#34;&#34;&#34;</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Sort the provided list
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([])
+</span><span class="sh">    []
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([1])
+</span><span class="sh">    [1]
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([1, 0])
+</span><span class="sh">    [0, 1]
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([1, -1, 0])
+</span><span class="sh">    [-1, 0, 1]
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">sort</span><span class="p">(</span><span class="n">list</span><span class="p">())</span> <span class="o">::</span> <span class="n">list</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">sort</span><span class="p">([]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[]</span>
+  <span class="kd">def</span> <span class="n">sort</span><span class="p">([</span><span class="n">first</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">first</span><span class="p">]</span>
+  <span class="kd">def</span> <span class="n">sort</span><span class="p">([</span><span class="n">first</span> <span class="o">|</span> <span class="n">rest</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_sort</span><span class="p">([</span><span class="n">first</span><span class="p">],</span> <span class="n">rest</span><span class="p">)</span>
+<span class="k">end</span>
+</code></pre></div><p>Note: only Lists were supported in this implementation for simplicity.</p>
+<p>The main sorting logic will come in the form of two private recursive functions.</p>
+<p>The first, <code>do_sort/2</code> will handle looping over each element of the array and
+placing it into the correct position amongst the sorted elements.</p>
+<p>To do this an accumulator will be used to store the elements in sorted position.</p>
+<p><code>do_sort/2</code> accepts the sorted elements as its first parameter and the remaining
+unsorted elements as its second parameter.</p>
+<p>It will consist of 2 clauses.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="n">_unsorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">insert</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">sorted</span><span class="p">),</span> <span class="n">tail</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">sorted</span>
+</code></pre></div><p>The second private function is <code>insert/2</code>.
+It takes care of looping through the sorted list and placing an element in the
+correct position.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="c1"># if no elements to compare against in sorted list, return element as a list</span>
+  <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">_sorted</span> <span class="o">=</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">element</span><span class="p">]</span>
+  <span class="c1"># if element is less than the first element of the sorted list, insert at front</span>
+  <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">_rest</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted</span><span class="p">)</span> <span class="ow">when</span> <span class="n">element</span> <span class="o">&lt;=</span> <span class="n">min</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">element</span> <span class="o">|</span> <span class="n">sorted</span><span class="p">]</span>
+  <span class="c1"># Otherwise element is larger than min and we check it against the next sorted element</span>
+  <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">rest</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">rest</span><span class="p">)]</span>
+</code></pre></div><p>Putting it all together the implementation is:</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.Sorting.InsertionSort</span> <span class="k">do</span>
+  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Simple insertion sort implementation
+</span><span class="sh">  &#34;&#34;&#34;</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Sort the provided list
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([])
+</span><span class="sh">    []
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([1])
+</span><span class="sh">    [1]
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([1, 0])
+</span><span class="sh">    [0, 1]
+</span><span class="sh">
+</span><span class="sh">    iex&gt; InsertionSort.sort([1, -1, 0])
+</span><span class="sh">    [-1, 0, 1]
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">sort</span><span class="p">(</span><span class="n">list</span><span class="p">())</span> <span class="o">::</span> <span class="n">list</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">sort</span><span class="p">([]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[]</span>
+  <span class="kd">def</span> <span class="n">sort</span><span class="p">([</span><span class="n">first</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">first</span><span class="p">]</span>
+  <span class="kd">def</span> <span class="n">sort</span><span class="p">([</span><span class="n">first</span> <span class="o">|</span> <span class="n">rest</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_sort</span><span class="p">([</span><span class="n">first</span><span class="p">],</span> <span class="n">rest</span><span class="p">)</span>
+
+  <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="n">_unsorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">insert</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">sorted</span><span class="p">),</span> <span class="n">tail</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="p">[]),</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">sorted</span>
+
+  <span class="c1"># if no elements to compare against in sorted, return element as a list</span>
+  <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">_sorted</span> <span class="o">=</span> <span class="p">[]),</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">element</span><span class="p">]</span>
+  <span class="c1"># if element is less than the first element of the sorted list, insert at front</span>
+  <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">_rest</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted</span><span class="p">)</span> <span class="ow">when</span> <span class="n">element</span> <span class="o">&lt;=</span> <span class="n">min</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">element</span> <span class="o">|</span> <span class="n">sorted</span><span class="p">]</span>
+  <span class="c1"># Otherwise try insert element into remainder of sorted list</span>
+  <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">rest</span><span class="p">]),</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">rest</span><span class="p">)]</span>
+<span class="k">end</span>
+</code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>Insertion sort is a simple sorting algorithm and implementing it in Elixir was a
+great way to get familiar with <a href="https://en.wikipedia.org/wiki/Recursion_(computer_science)">recursion</a>
+and <a href="https://en.wikipedia.org/wiki/Tail_call">tail-call recursion</a>.
+It was also a great exercise to increase comfort with pattern matches and
+looping lists.</p>
+<p>This implementation did lose the <code>O(1)</code> space complexity of an imperative
+implementation, but that loss holds true for most recursive implementations as
+space is needed on the stack for all the function calls.</p>
+<p><a href="https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/sorting/insertion_sort.ex">Click for the full
+implementation</a>.</p>
+<p><a href="https://github.com/SamuelWillis/algorithms/tree/main/notes/sorting/insertion-sort">And here is my full set of Insertion Sort
+notes</a>.</p>
+]]></content></item><item><title>Queues in Elixir</title><link>https://www.samuelwillis.dev/posts/queues-in-elixir/</link><pubDate>Tue, 13 Apr 2021 18:36:07 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/queues-in-elixir/</guid><description>Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
 Queues operate on a First In First out (FIFO) policy, meaning the first item placed onto the queue is the first to be removed.
 These are again essentially sugar for lists but there&amp;rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir.</description><content type="html"><![CDATA[<p>Continuing on from my previous <a href="https://www.samuelwillis.dev/posts/stacks-in-elixir/">Stacks in Elixir</a> post
 today I will cover implementing Queues in Elixir.</p>
