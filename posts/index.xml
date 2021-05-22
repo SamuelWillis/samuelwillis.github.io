@@ -1,4 +1,234 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 24 Apr 2021 12:59:20 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Insertion Sort in Elixir</title><link>https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/</link><pubDate>Sat, 24 Apr 2021 12:59:20 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/</guid><description>Departing from Data Structures such as Queues and Stacks this post will cover the insertion sort algorithm in Elixir.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 20 May 2021 21:00:50 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Max Subarray in Elixir</title><link>https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/</link><pubDate>Thu, 20 May 2021 21:00:50 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/</guid><description>The maximum subarray problem is defined as follows:
+Given an array A find a nonempty, contiguous subarray of A whose values have the largest sum.
+It&amp;rsquo;s an interesting little problem that benefits greatly from the use of a divide and conquer algorithm as the runtime goes from O(n^2) for the brute force method to O(nlog(n)) for the divide and conquer method.
+Brute Force Method The brute force method is quite simple.</description><content type="html"><![CDATA[<p>The maximum subarray problem is defined as follows:</p>
+<p>Given an array <em>A</em> find a nonempty, contiguous subarray of <em>A</em> whose values have the largest sum.</p>
+<p>It&rsquo;s an interesting little problem that benefits greatly from the use of a divide and conquer algorithm as the runtime goes from <code>O(n^2)</code> for the brute force method to <code>O(nlog(n))</code> for the divide and conquer method.</p>
+<h2 id="brute-force-method">Brute Force Method</h2>
+<p>The brute force method is quite simple.</p>
+<p>Take every pair of indices <code>x</code> and <code> y</code> s.t. <code>x &lt; y</code> and find the sum of elements given by the subarray <code>A[x..y]</code>.</p>
+<p>Since there is <code>nC2</code> ways to chose the pairs of indices, the brute force method is <code>O(n^2)</code>.</p>
+<p>This can be drastically improved by divide and conquer.</p>
+<h2 id="divide-and-conquer-method">Divide and Conquer Method</h2>
+<p>In the method, the array is split into <code>A[lo..mid]</code> and <code>A[mid+1..hi]</code>.
+With this split any contiguous subarray must land in one of three places:</p>
+<ul>
+<li>Entirely in the subarray <code>A[lo..mid]</code></li>
+<li>Entirely in the subarray <code>A[mid+1..hi]</code></li>
+<li>Crossing the midpoint s.t. <code>low &lt;= i &lt;= mid &lt; j &lt;= hi</code></li>
+</ul>
+<p>Thus, a maximum subarray must live in exactly one of those places as well.</p>
+<p>Finding the maximum subarray of <code>A[lo..mid]</code> and <code>A[mid+1..hi]</code> can each be done recursively.</p>
+<p>The maximum subarray crossing the midpoint will be composed of two arrays <code>A[i..mid]</code> and <code>A[mid+1..j]</code> where <code>lo &lt;= i &lt;= mid</code> and <code>mid &lt; j &lt;= hi</code>.</p>
+<p>We then compare the sums of each of the 3 maximum subarrays and return the largest sum.</p>
+<h3 id="runtime-of-divide-and-conquer-method">Runtime of Divide and Conquer Method</h3>
+<p>Here is a quick explanation for the runtime of the Divide and Conquer method.
+It is not in-depth at all and I would recommend looking elsewhere for more complete analysis.
+This is based off the <a href="https://en.wikipedia.org/wiki/Introduction_to_Algorithms">CLRS Algorithms book</a> analysis and is a very condensed summary.</p>
+<p>Since the array is split in half for each recursive call and the base cases are <code>O(1)</code>, the recursion equation is</p>
+<pre><code>T(n) = O(1) if n=1
+     = 2T(n/2) + O(n) if n &gt; 1
+</code></pre><p>Meaning that the <a href="https://www.programiz.com/dsa/master-theorem">Master Theorem</a> can be applied to solve the equation and the runtime is <code>O(nlog(n))</code>.</p>
+<h2 id="implementation">Implementation</h2>
+<p>This implementation will return the sum of maximum subarray.
+Since it is recursive, it lends itself nicely to implementation in Elixir.
+Returning the subarray can also be done with some adjustments to the code, for simplicity it was omitted.</p>
+<p>First we will start with base cases of the recursion:</p>
+<ul>
+<li>For an empty list, the maximum contiguous sum will be <code>0</code>.</li>
+<li>For a single element list, the max will be the value of the single element.</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DivideAndConquer.MaxContiguousSum</span> <span class="k">do</span>
+  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Find the maximum contiguous sum in a provided list
+</span><span class="sh">  &#34;&#34;&#34;</span>
+
+  <span class="kn">alias</span> <span class="nc">ElixirImpl.ListHelpers</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Find the maximum contiguous sum in the provided list.
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">())</span> <span class="o">::</span> <span class="n">integer</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">find</span><span class="p">([]),</span> <span class="ss">do</span><span class="p">:</span> <span class="mi">0</span>
+  <span class="kd">def</span> <span class="n">find</span><span class="p">([</span><span class="n">el</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">el</span>
+
+  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
+    <span class="c1"># TODO</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div><p>Next we will need a way to split the array into two parts.
+In practice, I&rsquo;d recommend using <a href="https://hexdocs.pm/elixir/Enum.html#split/2">Enum.split/2</a> but I found implementing my own to be a nice exercise.</p>
+<p>To perform the split, the middle index is calculated, then the original list is split into two recursively with elements <code>0..middle</code> in the first array and the remaining elements in the second.</p>
+<p>To avoid appending to a list, the left list is built by prepending and then reversed.
+Again, a home brewed reverse is used as a learning tool but I&rsquo;d suggest using <a href="https://hexdocs.pm/elixir/Enum.html#reverse/1">Enum.reverse/1</a> in practice.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Split a list into two parts leaving count elements in the first part.
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">
+</span><span class="sh">    iex&gt; split([1, 2, 3, 4], 2)
+</span><span class="sh">    {[1, 2] ,[3, 4]}
+</span><span class="sh">
+</span><span class="sh">    iex&gt; split([1, 2, 3], 10)
+</span><span class="sh">    {[1, 2, 3], []}
+</span><span class="sh">
+</span><span class="sh">    iex&gt; split([1, 2, 3], 0)
+</span><span class="sh">    {[], [1, 2, 3]}
+</span><span class="sh">
+</span><span class="sh">    iex&gt; split([], 1)
+</span><span class="sh">    {[], []}
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">(),</span> <span class="n">integer</span><span class="p">)</span> <span class="o">::</span> <span class="p">{</span><span class="n">list</span><span class="p">(),</span> <span class="n">list</span><span class="p">()}</span>
+  <span class="kd">def</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">count</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_split</span><span class="p">({[],</span> <span class="n">list</span><span class="p">},</span> <span class="n">count</span><span class="p">)</span>
+
+  <span class="kd">def</span> <span class="n">do_split</span><span class="p">({</span><span class="n">left</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]},</span> <span class="n">count</span><span class="p">)</span> <span class="ow">when</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">do_split</span><span class="p">({[</span><span class="n">head</span> <span class="o">|</span> <span class="n">left</span><span class="p">],</span> <span class="n">tail</span><span class="p">},</span> <span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+  <span class="kd">def</span> <span class="n">do_split</span><span class="p">({</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">},</span> <span class="mi">0</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="n">reverse</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="n">right</span><span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">do_split</span><span class="p">({</span><span class="n">left</span><span class="p">,</span> <span class="p">[]},</span> <span class="n">_count</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="n">reverse</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="p">[]}</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Reverse a list
+</span><span class="sh">
+</span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
+</span><span class="sh">    iex&gt; reverse([])
+</span><span class="sh">    []
+</span><span class="sh">
+</span><span class="sh">    iex&gt; reverse([1, 2, 3])
+</span><span class="sh">    [3, 2, 1]
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">reverse</span><span class="p">(</span><span class="n">list</span><span class="p">())</span> <span class="o">::</span> <span class="n">list</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">reverse</span><span class="p">(</span><span class="n">list</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([],</span> <span class="n">list</span><span class="p">)</span>
+
+  <span class="kd">def</span> <span class="n">do_reverse</span><span class="p">([],</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([</span><span class="n">head</span><span class="p">],</span> <span class="n">tail</span><span class="p">)</span>
+  <span class="kd">def</span> <span class="n">do_reverse</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">list</span><span class="p">],</span> <span class="n">tail</span><span class="p">)</span>
+  <span class="kd">def</span> <span class="n">do_reverse</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">list</span>
+</code></pre></div><p>Adding the middle index calculation, the split, and the recursive calls to <code>find</code> it now looks like:</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="n">list</span> <span class="o">|&gt;</span> <span class="n">length</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="p">{</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">middle</span><span class="p">)</span>
+
+    <span class="n">left_sum</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+    <span class="n">right_sum</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+  <span class="k">end</span>
+</code></pre></div><p>The final piece is finding the maximum sum that crosses the middle.
+In order to do this, the maximum sum in the array <code>A[lo..mid]</code> is found and then added to the maximum sum from the array going from <code>A[mid+1..hi]</code>.</p>
+<p>To find these maximum sums another recursive function is needed.
+This function will take a list and add elements together until the sum is no longer smaller than the sum plus the next element.</p>
+<p>Using pattern matching and guards this is quite simple.
+Care must be taken when finding the sum of the <code>left</code> array as the maximum sum must include the middle element, so it is reversed before being passed to the <code>find_sum/2</code> helper.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">find_cross_sum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">left_sum</span> <span class="o">=</span> <span class="n">left</span> <span class="o">|&gt;</span> <span class="nc">ListHelpers</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">find_sum</span><span class="p">()</span>
+    <span class="n">right_sum</span> <span class="o">=</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+
+    <span class="n">left_sum</span> <span class="o">+</span> <span class="n">right_sum</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">sum</span> <span class="p">\\</span> <span class="no">nil</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">],</span> <span class="no">nil</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">],</span> <span class="n">sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">sum</span> <span class="o">&lt;=</span> <span class="n">sum</span> <span class="o">+</span> <span class="n">head</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">sum</span> <span class="o">+</span> <span class="n">head</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">_list</span><span class="p">,</span> <span class="n">sum</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">sum</span>
+</code></pre></div><p>The find function needs to be updated to find the cross sum, making it look as so:</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="n">list</span> <span class="o">|&gt;</span> <span class="n">length</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="p">{</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="nc">ListHelpers</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">middle</span><span class="p">)</span>
+
+    <span class="n">left_sum</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+    <span class="n">right_sum</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+    <span class="n">cross_sum</span> <span class="o">=</span> <span class="n">find_cross_sum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+  <span class="k">end</span>
+</code></pre></div><p>The final piece is returning the maximum of <code>left_sum</code>, <code>right_sum</code>, and <code>cross_sum</code>.
+This can be done with a <code>cond</code> statement but I thought a <code>max/3</code> that leverages guards was nicer to read and easier to follow.</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">left_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">right_sum</span>
+
+  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">right_sum</span> <span class="o">&lt;=</span> <span class="n">left_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">left_sum</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">left_sum</span>
+
+  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">_left_sum</span><span class="p">,</span> <span class="n">_right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">cross_sum</span>
+</code></pre></div><p>Putting this all together the final implementation is</p>
+<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DivideAndConquer.MaxContiguousSum</span> <span class="k">do</span>
+  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Find the maximum contiguous sum in a provided list
+</span><span class="sh">  &#34;&#34;&#34;</span>
+
+  <span class="kn">alias</span> <span class="nc">ElixirImpl.ListHelpers</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Find the maximum contiguous sum in the provided list.
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">())</span> <span class="o">::</span> <span class="n">integer</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">find</span><span class="p">([]),</span> <span class="ss">do</span><span class="p">:</span> <span class="mi">0</span>
+  <span class="kd">def</span> <span class="n">find</span><span class="p">([</span><span class="n">el</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">el</span>
+
+  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="n">list</span> <span class="o">|&gt;</span> <span class="n">length</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="p">{</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">middle</span><span class="p">)</span>
+
+    <span class="n">left_sum</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+    <span class="n">right_sum</span> <span class="o">=</span> <span class="n">find</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+    <span class="n">cross_sum</span> <span class="o">=</span> <span class="n">find_cross_sum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+
+    <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="kd">defp</span> <span class="n">find_cross_sum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">left_sum</span> <span class="o">=</span> <span class="n">left</span> <span class="o">|&gt;</span> <span class="n">reverse</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">find_sum</span><span class="p">()</span>
+    <span class="n">right_sum</span> <span class="o">=</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
+
+    <span class="n">left_sum</span> <span class="o">+</span> <span class="n">right_sum</span>
+  <span class="k">end</span>
+
+  <span class="c1"># Find max sum helper</span>
+  <span class="na">@spec</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">list</span><span class="p">(),</span> <span class="no">nil</span> <span class="o">|</span> <span class="n">integer</span><span class="p">())</span> <span class="o">::</span> <span class="n">integer</span><span class="p">()</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">sum</span> <span class="p">\\</span> <span class="no">nil</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">],</span> <span class="no">nil</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">head</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">],</span> <span class="n">sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">sum</span> <span class="o">&lt;=</span> <span class="n">sum</span> <span class="o">+</span> <span class="n">head</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">sum</span> <span class="o">+</span> <span class="n">head</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">_list</span><span class="p">,</span> <span class="n">sum</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">sum</span>
+
+  <span class="c1"># Max of 3 integer helper</span>
+  <span class="na">@spec</span> <span class="n">max</span><span class="p">(</span><span class="n">integer</span><span class="p">(),</span> <span class="n">integer</span><span class="p">(),</span> <span class="n">integer</span><span class="p">())</span> <span class="o">::</span> <span class="n">integer</span><span class="p">()</span>
+  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">left_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">right_sum</span>
+
+  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">right_sum</span> <span class="o">&lt;=</span> <span class="n">left_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">left_sum</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">left_sum</span>
+
+  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">_left_sum</span><span class="p">,</span> <span class="n">_right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">cross_sum</span>
+
+  <span class="c1"># Split list helper</span>
+  <span class="na">@spec</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">(),</span> <span class="n">integer</span><span class="p">)</span> <span class="o">::</span> <span class="p">{</span><span class="n">list</span><span class="p">(),</span> <span class="n">list</span><span class="p">()}</span>
+  <span class="kd">defp</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">count</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_split</span><span class="p">({[],</span> <span class="n">list</span><span class="p">},</span> <span class="n">count</span><span class="p">)</span>
+
+  <span class="kd">defp</span> <span class="n">do_split</span><span class="p">({</span><span class="n">left</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]},</span> <span class="n">count</span><span class="p">)</span> <span class="ow">when</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">,</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="n">do_split</span><span class="p">({[</span><span class="n">head</span> <span class="o">|</span> <span class="n">left</span><span class="p">],</span> <span class="n">tail</span><span class="p">},</span> <span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+  <span class="kd">defp</span> <span class="n">do_split</span><span class="p">({</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">},</span> <span class="mi">0</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="n">reverse</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="n">right</span><span class="p">}</span>
+
+  <span class="kd">defp</span> <span class="n">do_split</span><span class="p">({</span><span class="n">left</span><span class="p">,</span> <span class="p">[]},</span> <span class="n">_count</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">{</span><span class="n">reverse</span><span class="p">(</span><span class="n">left</span><span class="p">),</span> <span class="p">[]}</span>
+
+  <span class="c1"># Reverse list helper</span>
+  <span class="na">@spec</span> <span class="n">reverse</span><span class="p">(</span><span class="n">list</span><span class="p">())</span> <span class="o">::</span> <span class="n">list</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">reverse</span><span class="p">(</span><span class="n">list</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([],</span> <span class="n">list</span><span class="p">)</span>
+
+  <span class="kd">defp</span> <span class="n">do_reverse</span><span class="p">([],</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([</span><span class="n">head</span><span class="p">],</span> <span class="n">tail</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">do_reverse</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">list</span><span class="p">],</span> <span class="n">tail</span><span class="p">)</span>
+  <span class="kd">defp</span> <span class="n">do_reverse</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">list</span>
+<span class="k">end</span>
+</code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>Finding the maximum contiguous sum in Elixir is quite simple to do.
+Especially after wrapping ones head around the recursion involved.</p>
+<p>I think that this is easier to follow than the imperative version as well.</p>
+<p>I hope this was useful for anyone looking into algorithms in functional languages!</p>
+<p><a href="https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/divide_and_conquer/max_contiguous_sum.ex">Click for the full
+implementation</a>.</p>
+<p><a href="https://github.com/SamuelWillis/algorithms/tree/main/notes/divide-and-conquer/maximum-subarray">And here is my full set of Insertion Sort
+notes</a>.</p>
+]]></content></item><item><title>Insertion Sort in Elixir</title><link>https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/</link><pubDate>Sat, 24 Apr 2021 12:59:20 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/</guid><description>Departing from Data Structures such as Queues and Stacks this post will cover the insertion sort algorithm in Elixir.
 Insertion sort is one of the first sorting algorithms introduced in Computer Science as its quite simple.
 Insertion sort is quite efficient on small data sets and it does the sort in place. Meaning it has O(1) (constant) memory space requirements. Unfortunately, this does not hold true in Elixir as recursion is used causing the space-complexity to be O(n) (linear).</description><content type="html"><![CDATA[<p>Departing from Data Structures such as <a href="https://www.samuelwillis.dev/posts/queues-in-elixir/">Queues</a>
 and <a href="https://www.samuelwillis.dev/posts/stacks-in-elixir/">Stacks</a> this post will cover the insertion
