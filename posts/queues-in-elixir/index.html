@@ -1,15 +1,77 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="ie=edge"><meta itemprop=name content="Queues in Elixir"><meta itemprop=description content="Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
+<!doctype html><html lang=en-us>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta http-equiv=x-ua-compatible content="ie=edge">
+<meta itemprop=name content="Queues in Elixir">
+<meta itemprop=description content="Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
 Queues operate on a First In First out (FIFO) policy, meaning the first item placed onto the queue is the first to be removed.
-These are again essentially sugar for lists but there&rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir."><meta itemprop=datePublished content="2021-04-19T15:10:00-06:00"><meta itemprop=dateModified content="2021-04-13T18:36:07-06:00"><meta itemprop=wordCount content="791"><meta itemprop=keywords content="Elixir,DataStructures,Implementation,Code,"><meta property="og:title" content="Queues in Elixir"><meta property="og:description" content="Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
+These are again essentially sugar for lists but there&rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir."><meta itemprop=datePublished content="2021-04-19T15:10:00-06:00">
+<meta itemprop=dateModified content="2021-04-13T18:36:07-06:00">
+<meta itemprop=wordCount content="791">
+<meta itemprop=keywords content="Elixir,DataStructures,Implementation,Code,"><meta property="og:title" content="Queues in Elixir">
+<meta property="og:description" content="Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
 Queues operate on a First In First out (FIFO) policy, meaning the first item placed onto the queue is the first to be removed.
-These are again essentially sugar for lists but there&rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir."><meta property="og:type" content="article"><meta property="og:url" content="https://www.samuelwillis.dev/posts/queues-in-elixir/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-04-19T15:10:00-06:00"><meta property="article:modified_time" content="2021-04-13T18:36:07-06:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Queues in Elixir"><meta name=twitter:description content="Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
+These are again essentially sugar for lists but there&rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.samuelwillis.dev/posts/queues-in-elixir/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-04-19T15:10:00-06:00">
+<meta property="article:modified_time" content="2021-04-13T18:36:07-06:00">
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="Queues in Elixir">
+<meta name=twitter:description content="Continuing on from my previous Stacks in Elixir post today I will cover implementing Queues in Elixir.
 Queues operate on a First In First out (FIFO) policy, meaning the first item placed onto the queue is the first to be removed.
-These are again essentially sugar for lists but there&rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir."><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color><link rel="shortcut icon" href=/favicon.ico><title>Queues in Elixir</title><link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous></head><body id=page><header id=site-header class="animated slideInUp"><div class="hdr-wrapper section-inner"><div class=hdr-left><div class=site-branding><a href=https://www.samuelwillis.dev>samuel willis</a></div><nav class="site-nav hide-in-mobile"><a href=https://www.samuelwillis.dev/about/>about</a>
-<a href=https://www.samuelwillis.dev/posts/>posts</a></nav></div><div class="hdr-right hdr-icons"><span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div></div></header><div id=mobile-menu class="animated fast"><ul><li><a href=https://www.samuelwillis.dev/about/>about</a></li><li><a href=https://www.samuelwillis.dev/posts/>posts</a></li></ul></div><main class="site-main section-inner animated fadeIn faster"><article class=thin><header class=post-header><div class=post-meta><span>Apr 13, 2021</span></div><h1>Queues in Elixir</h1></header><div class=content><p>Continuing on from my previous <a href=https://www.samuelwillis.dev/posts/stacks-in-elixir/>Stacks in Elixir</a> post
-today I will cover implementing Queues in Elixir.</p><p>Queues operate on a First In First out (FIFO) policy, meaning the first item
-placed onto the queue is the first to be removed.</p><p>These are again essentially sugar for lists but there&rsquo;s a few gotchas to get
+These are again essentially sugar for lists but there&rsquo;s a few gotchas to get around when implementing them in Elixir. The main being that appending to lists can be an expensive operation in Elixir.">
+<link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
+<link rel=manifest href=/site.webmanifest>
+<link rel=mask-icon href=/safari-pinned-tab.svg color>
+<link rel="shortcut icon" href=/favicon.ico>
+<title>Queues in Elixir</title>
+<link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous>
+</head>
+<body id=page>
+<header id=site-header class="animated slideInUp">
+<div class="hdr-wrapper section-inner">
+<div class=hdr-left>
+<div class=site-branding>
+<a href=https://www.samuelwillis.dev>samuel willis</a>
+</div>
+<nav class="site-nav hide-in-mobile">
+<a href=https://www.samuelwillis.dev/about/>about</a>
+<a href=https://www.samuelwillis.dev/posts/>posts</a>
+</nav>
+</div>
+<div class="hdr-right hdr-icons">
+<span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+</div>
+</div>
+</header>
+<div id=mobile-menu class="animated fast">
+<ul>
+<li><a href=https://www.samuelwillis.dev/about/>about</a></li>
+<li><a href=https://www.samuelwillis.dev/posts/>posts</a></li>
+</ul>
+</div>
+<main class="site-main section-inner animated fadeIn faster">
+<article class=thin>
+<header class=post-header>
+<div class=post-meta><span>Apr 13, 2021</span></div>
+<h1>Queues in Elixir</h1>
+</header>
+<div class=content>
+<p>Continuing on from my previous <a href=https://www.samuelwillis.dev/posts/stacks-in-elixir/>Stacks in Elixir</a> post
+today I will cover implementing Queues in Elixir.</p>
+<p>Queues operate on a First In First out (FIFO) policy, meaning the first item
+placed onto the queue is the first to be removed.</p>
+<p>These are again essentially sugar for lists but there&rsquo;s a few gotchas to get
 around when implementing them in Elixir.
-The main being that appending to lists can be an expensive operation in Elixir.</p><p>But first, the queue operations.</p><h2 id=operations>Operations<a href=#operations class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>Formally, all the operations for Queues are:</p><pre><code>Enqueue(Q, x)
+The main being that appending to lists can be an expensive operation in Elixir.</p>
+<p>But first, the queue operations.</p>
+<h2 id=operations>Operations<a href=#operations class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Formally, all the operations for Queues are:</p>
+<pre><code>Enqueue(Q, x)
   if Queue-Full(Q) throw Overflow Error
 
   Q[Q.tail] = x
@@ -37,21 +99,30 @@ Queue-Full(Q)
     return false
 </code></pre><p>This implementation will omit the full operation as a list will be used to store
 the items on the queue and they do not require manual resizing, unlike arrays
-would.</p><h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>The implementation will again use a list to store the items in the queue.</p><p>Normally when adding an item to the queue it would be added to the back.
+would.</p>
+<h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>The implementation will again use a list to store the items in the queue.</p>
+<p>Normally when adding an item to the queue it would be added to the back.
 This would require appending to a list and in Elixir, that can be very
 expensive.
 Appending the new item would be possible but is <a href=https://hexdocs.pm/elixir/Kernel.html#++/2>warned
 against</a>.
-The official suggestion is to prepend and then reverse the list.</p><p>This implementation will follow the documentation&rsquo;s advice and prepend any new
+The official suggestion is to prepend and then reverse the list.</p>
+<p>This implementation will follow the documentation&rsquo;s advice and prepend any new
 items to the queue.
-Then to dequeue it will reverse the elements and return the last one.</p><p>I admit this is probably overkill and appending would probably be fine but I
-wanted to write my own reverse function to practice my Elixir.</p><p>In practice, appending would likely be fine unless the Queue was expected to be
+Then to dequeue it will reverse the elements and return the last one.</p>
+<p>I admit this is probably overkill and appending would probably be fine but I
+wanted to write my own reverse function to practice my Elixir.</p>
+<p>In practice, appending would likely be fine unless the Queue was expected to be
 extremely large and then using the
 <a href=https://hexdocs.pm/elixir/Enum.html#reverse/1><code>Enum.reverse</code></a> built in functions
 would be better than rolling my own as it leverages the highly optimized
 <code>:list.reverse</code>
-from Erlang.</p><h3 id=set-up>Set up<a href=#set-up class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>As in the <a href=https://www.samuelwillis.dev/posts/stacks-in-elixir/#implementation>Stack implementation</a> a struct will be used to represent
-the Queue.</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Queue</span> <span class=k>do</span>
+from Erlang.</p>
+<h3 id=set-up>Set up<a href=#set-up class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>As in the <a href=https://www.samuelwillis.dev/posts/stacks-in-elixir/#implementation>Stack implementation</a> a struct will be used to represent
+the Queue.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Queue</span> <span class=k>do</span>
   <span class=na>@moduledoc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Queue implementation.
 </span><span class=sh>  &#34;&#34;&#34;</span>
@@ -61,8 +132,10 @@ the Queue.</p><div class=highlight><pre class=chroma><code class=language-elixir
            <span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>any</span><span class=p>()]</span>
          <span class=p>}</span>
 <span class=k>end</span>
-</code></pre></div><h3 id=enqueue>Enqueue<a href=#enqueue class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>Because this implementation places the new items at the front of the list of
-elements the enqueue implementation is quite simple.</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+</code></pre></div><h3 id=enqueue>Enqueue<a href=#enqueue class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>Because this implementation places the new items at the front of the list of
+elements the enqueue implementation is quite simple.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Add an item into a queue.
 </span><span class=sh>
 </span><span class=sh>  </span><span class=err>##</span><span class=sh> Examples
@@ -78,12 +151,19 @@ elements the enqueue implementation is quite simple.</p><div class=highlight><pr
       <span class=o>|</span> <span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>x</span> <span class=o>|</span> <span class=n>queue</span><span class=o>.</span><span class=n>elements</span><span class=p>]</span>
     <span class=p>}</span>
   <span class=k>end</span>
-</code></pre></div><h4 id=dequeue>Dequeue<a href=#dequeue class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h4><p>Dequeueing is a little trickier as the list of elements will have the oldest
-item at the end of the list.</p><p>As mentioned in the <a href=https://www.samuelwillis.dev/posts/queues-in-elixir/#implementation>Implementation Section</a> some list reversals will need to be
-performed.</p><p>There are two reversals total, the first is to get the oldest item, the second
-is to put the list back into the &ldquo;correct&rdquo; order.</p><p>In the case we dequeue an item, a tuple is returned consisting of the <code>:ok</code>
+</code></pre></div><h4 id=dequeue>Dequeue<a href=#dequeue class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h4>
+<p>Dequeueing is a little trickier as the list of elements will have the oldest
+item at the end of the list.</p>
+<p>As mentioned in the <a href=https://www.samuelwillis.dev/posts/queues-in-elixir/#implementation>Implementation Section</a> some list reversals will need to be
+performed.</p>
+<p>There are two reversals total, the first is to get the oldest item, the second
+is to put the list back into the &ldquo;correct&rdquo; order.</p>
+<p>In the case we dequeue an item, a tuple is returned consisting of the <code>:ok</code>
 atom, the item, and the queue with the list of elements omitting the dequeued
-item.</p><p>If the list of elements is empty a <code>{:error, "Empty Queue"}</code> tuple is returned.</p><p>Putting it together it looks as follows:</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+item.</p>
+<p>If the list of elements is empty a <code>{:error, "Empty Queue"}</code> tuple is returned.</p>
+<p>Putting it together it looks as follows:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Remove an item from the queue.
 </span><span class=sh>
 </span><span class=sh>  </span><span class=err>##</span><span class=sh> Examples
@@ -109,11 +189,14 @@ item.</p><p>If the list of elements is empty a <code>{:error, "Empty Queue"}</co
        <span class=ss>elements</span><span class=p>:</span> <span class=n>reverse_elements</span><span class=p>(</span><span class=n>elements</span><span class=p>)</span>
      <span class=p>}}</span>
   <span class=k>end</span>
-</code></pre></div><h3 id=empty>Empty<a href=#empty class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>The empty operation is quite simple using pattern matching.</p><p>If the Stack&rsquo;s elements matches a non empty list, we return <code>false</code>.
+</code></pre></div><h3 id=empty>Empty<a href=#empty class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>The empty operation is quite simple using pattern matching.</p>
+<p>If the Stack&rsquo;s elements matches a non empty list, we return <code>false</code>.
 Otherwise, return <code>true</code>.
 The <a href=https://hexdocs.pm/elixir/master/naming-conventions.html#trailing-question-mark-foo>trailing question
 mark</a>
-naming convention is used in the implementation.</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+naming convention is used in the implementation.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Check the if queue is empty
 </span><span class=sh>
 </span><span class=sh>  </span><span class=err>##</span><span class=sh> Examples
@@ -125,12 +208,47 @@ naming convention is used in the implementation.</p><div class=highlight><pre cl
 </span><span class=sh>  &#34;&#34;&#34;</span>
   <span class=kd>def</span> <span class=n>empty?</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>_head</span> <span class=o>|</span> <span class=n>_tail</span><span class=p>]}),</span> <span class=ss>do</span><span class=p>:</span> <span class=no>false</span>
   <span class=kd>def</span> <span class=n>empty?</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=p>[]}),</span> <span class=ss>do</span><span class=p>:</span> <span class=no>true</span>
-</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>Implementing a simple Queue is a fairly easy task in Elixir.
+</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Implementing a simple Queue is a fairly easy task in Elixir.
 It could be made even simpler if
 <a href=https://hexdocs.pm/elixir/Kernel.html#++/2>Kernel.++/2</a> was used to append the
-new items to the back of the list of elements.</p><p>As it stands, implementing a simple Queue was a great way to get familiar with
+new items to the back of the list of elements.</p>
+<p>As it stands, implementing a simple Queue was a great way to get familiar with
 Elixir&rsquo;s lists and their limitations as well as start digging into idiomatic
-ways to handle lists.</p><p><a href=https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/queue.ex>Click for the full
-implementation</a>.</p><p><a href=https://github.com/SamuelWillis/algorithms/tree/main/notes/data-structures/queue>And here is my full set of Queue
-notes</a>.</p></div><hr class=post-end><footer class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span></p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>791 Words</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-04-14 00:36 +0000</p></footer></article><div class="post-nav thin"><a class=next-post href=https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/><span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Insertion Sort in Elixir</span></a>
-<a class=prev-post href=https://www.samuelwillis.dev/posts/stacks-in-elixir/><span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Stacks in Elixir</span></a></div><div id=comments class=thin></div></main><footer id=site-footer class="section-inner thin animated fadeIn faster"><p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p><p>Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></p></footer><script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script><script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script><script async src=https://www.google-analytics.com/analytics.js></script></body></html>
+ways to handle lists.</p>
+<p><a href=https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/queue.ex>Click for the full
+implementation</a>.</p>
+<p><a href=https://github.com/SamuelWillis/algorithms/tree/main/notes/data-structures/queue>And here is my full set of Queue
+notes</a>.</p>
+</div>
+<hr class=post-end>
+<footer class=post-info>
+<p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span>
+</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>791 Words</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-04-14 00:36 +0000</p>
+</footer>
+</article>
+<div class="post-nav thin">
+<a class=next-post href=https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/>
+<span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Insertion Sort in Elixir</span>
+</a>
+<a class=prev-post href=https://www.samuelwillis.dev/posts/stacks-in-elixir/>
+<span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Stacks in Elixir</span>
+</a>
+</div>
+<div id=comments class=thin>
+</div>
+</main>
+<footer id=site-footer class="section-inner thin animated fadeIn faster">
+<p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p>
+<p>
+Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a>
+</p>
+</footer>
+<script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script>
+<script async src=https://www.google-analytics.com/analytics.js></script>
+</body>
+</html>

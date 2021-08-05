@@ -1,19 +1,80 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="ie=edge"><meta itemprop=name content="Stacks in Elixir"><meta itemprop=description content="Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
+<!doctype html><html lang=en-us>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta http-equiv=x-ua-compatible content="ie=edge">
+<meta itemprop=name content="Stacks in Elixir">
+<meta itemprop=description content="Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
 They operate under the Last In First Out (LIFO) policy, meaning the last object placed onto the stack is the first one to be removed from it.
-In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching."><meta itemprop=datePublished content="2021-04-11T15:12:45-06:00"><meta itemprop=dateModified content="2021-04-11T15:12:45-06:00"><meta itemprop=wordCount content="672"><meta itemprop=keywords content="Elixir,DataStructures,Implementation,Code,"><meta property="og:title" content="Stacks in Elixir"><meta property="og:description" content="Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
+In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching."><meta itemprop=datePublished content="2021-04-11T15:12:45-06:00">
+<meta itemprop=dateModified content="2021-04-11T15:12:45-06:00">
+<meta itemprop=wordCount content="672">
+<meta itemprop=keywords content="Elixir,DataStructures,Implementation,Code,"><meta property="og:title" content="Stacks in Elixir">
+<meta property="og:description" content="Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
 They operate under the Last In First Out (LIFO) policy, meaning the last object placed onto the stack is the first one to be removed from it.
-In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching."><meta property="og:type" content="article"><meta property="og:url" content="https://www.samuelwillis.dev/posts/stacks-in-elixir/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-04-11T15:12:45-06:00"><meta property="article:modified_time" content="2021-04-11T15:12:45-06:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Stacks in Elixir"><meta name=twitter:description content="Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
+In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.samuelwillis.dev/posts/stacks-in-elixir/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-04-11T15:12:45-06:00">
+<meta property="article:modified_time" content="2021-04-11T15:12:45-06:00">
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="Stacks in Elixir">
+<meta name=twitter:description content="Stacks are one of the most basic data structures in Computer Science. Nonetheless, they are quite useful and used often.
 They operate under the Last In First Out (LIFO) policy, meaning the last object placed onto the stack is the first one to be removed from it.
-In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching."><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color><link rel="shortcut icon" href=/favicon.ico><title>Stacks in Elixir</title><link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous></head><body id=page><header id=site-header class="animated slideInUp"><div class="hdr-wrapper section-inner"><div class=hdr-left><div class=site-branding><a href=https://www.samuelwillis.dev>samuel willis</a></div><nav class="site-nav hide-in-mobile"><a href=https://www.samuelwillis.dev/about/>about</a>
-<a href=https://www.samuelwillis.dev/posts/>posts</a></nav></div><div class="hdr-right hdr-icons"><span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div></div></header><div id=mobile-menu class="animated fast"><ul><li><a href=https://www.samuelwillis.dev/about/>about</a></li><li><a href=https://www.samuelwillis.dev/posts/>posts</a></li></ul></div><main class="site-main section-inner animated fadeIn faster"><article class=thin><header class=post-header><div class=post-meta><span>Apr 11, 2021</span></div><h1>Stacks in Elixir</h1></header><div class=content><p>Stacks are one of the most basic data structures in Computer Science.
-Nonetheless, they are quite useful and used often.</p><p>They operate under the Last In First Out (LIFO) policy, meaning the last object
-placed onto the stack is the first one to be removed from it.</p><p>In Elixir they are essentially syntactical sugar for
+In Elixir they are essentially syntactical sugar for Lists but implementing them was a nice way to get acquainted with Structs and basic pattern matching.">
+<link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
+<link rel=manifest href=/site.webmanifest>
+<link rel=mask-icon href=/safari-pinned-tab.svg color>
+<link rel="shortcut icon" href=/favicon.ico>
+<title>Stacks in Elixir</title>
+<link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous>
+</head>
+<body id=page>
+<header id=site-header class="animated slideInUp">
+<div class="hdr-wrapper section-inner">
+<div class=hdr-left>
+<div class=site-branding>
+<a href=https://www.samuelwillis.dev>samuel willis</a>
+</div>
+<nav class="site-nav hide-in-mobile">
+<a href=https://www.samuelwillis.dev/about/>about</a>
+<a href=https://www.samuelwillis.dev/posts/>posts</a>
+</nav>
+</div>
+<div class="hdr-right hdr-icons">
+<span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+</div>
+</div>
+</header>
+<div id=mobile-menu class="animated fast">
+<ul>
+<li><a href=https://www.samuelwillis.dev/about/>about</a></li>
+<li><a href=https://www.samuelwillis.dev/posts/>posts</a></li>
+</ul>
+</div>
+<main class="site-main section-inner animated fadeIn faster">
+<article class=thin>
+<header class=post-header>
+<div class=post-meta><span>Apr 11, 2021</span></div>
+<h1>Stacks in Elixir</h1>
+</header>
+<div class=content>
+<p>Stacks are one of the most basic data structures in Computer Science.
+Nonetheless, they are quite useful and used often.</p>
+<p>They operate under the Last In First Out (LIFO) policy, meaning the last object
+placed onto the stack is the first one to be removed from it.</p>
+<p>In Elixir they are essentially syntactical sugar for
 <a href=https://hexdocs.pm/elixir/List.html>Lists</a> but implementing them was a nice
 way to get acquainted with <a href=https://elixir-lang.org/getting-started/structs.html>Structs</a>
 and basic <a href=https://elixir-lang.org/getting-started/pattern-matching.html>pattern
-matching</a>.</p><h2 id=operations>Operations<a href=#operations class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>Formally, the operations for a Stack are <strong>push</strong>, <strong>pop</strong>, <strong>empty</strong>, and <strong>full</strong>.
+matching</a>.</p>
+<h2 id=operations>Operations<a href=#operations class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Formally, the operations for a Stack are <strong>push</strong>, <strong>pop</strong>, <strong>empty</strong>, and <strong>full</strong>.
 They typically include checks for <em>overflow errors</em> (pushing to a full stack) and
-<em>underflow errors</em> (popping from an empty stack).</p><pre><code>Push(S, x)
+<em>underflow errors</em> (popping from an empty stack).</p>
+<pre><code>Push(S, x)
   if Full(S) throw Overflow Error
   S[++S.top] = x
 
@@ -32,16 +93,20 @@ Full(S)
     return True
   else
     return False
-</code></pre><h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>The Elixir implementation will use a linked list.
+</code></pre><h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>The Elixir implementation will use a linked list.
 This is because we do not have access to a traditional/imperative style arrays in
-Elixir.</p><p>Linked lists do not have a static size and, as such, they do not require
+Elixir.</p>
+<p>Linked lists do not have a static size and, as such, they do not require
 resizing when too many elements are added to the stack.
 Because of this each operation will take constant time in the <strong>worst
 case</strong>.
-This does come at the cost of more space used to store each item.</p><p>A <a href=https://elixir-lang.org/getting-started/structs.html>Struct</a> will be used to
+This does come at the cost of more space used to store each item.</p>
+<p>A <a href=https://elixir-lang.org/getting-started/structs.html>Struct</a> will be used to
 represent a Stack.
 A field called <code>elements</code> will be used to store the list of elements.
-Each item in the elements list can have any type.</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Stack</span> <span class=k>do</span>
+Each item in the elements list can have any type.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Stack</span> <span class=k>do</span>
   <span class=na>@moduledoc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Stack implementation.
 </span><span class=sh>
@@ -54,8 +119,12 @@ Each item in the elements list can have any type.</p><div class=highlight><pre c
            <span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>any</span><span class=p>()]</span>
          <span class=p>}</span>
 <span class=k>end</span>
-</code></pre></div><h3 id=push>Push<a href=#push class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>Lets add the push operation.</p><p>Since the elements struct key will always exist the <code>|</code> operator to can be
-used to update the elements key in the struct without worrying about an error.</p><p>Thus the <code>push</code> operation looks like so:</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+</code></pre></div><h3 id=push>Push<a href=#push class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>Lets add the push operation.</p>
+<p>Since the elements struct key will always exist the <code>|</code> operator to can be
+used to update the elements key in the struct without worrying about an error.</p>
+<p>Thus the <code>push</code> operation looks like so:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Push an item onto a stack.
 </span><span class=sh>
 </span><span class=sh>  </span><span class=err>##</span><span class=sh> Examples
@@ -72,12 +141,17 @@ used to update the elements key in the struct without worrying about an error.</
       <span class=o>|</span> <span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>x</span> <span class=o>|</span> <span class=n>stack</span><span class=o>.</span><span class=n>elements</span><span class=p>]</span>
     <span class=p>}</span>
   <span class=k>end</span>
-</code></pre></div><h3 id=pop>Pop<a href=#pop class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>Next, the <strong>pop</strong> operation.</p><p>For the pop, a check for a empty elements list will be needed.</p><p>This check is done using pattern matching.
+</code></pre></div><h3 id=pop>Pop<a href=#pop class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>Next, the <strong>pop</strong> operation.</p>
+<p>For the pop, a check for a empty elements list will be needed.</p>
+<p>This check is done using pattern matching.
 If the Stack&rsquo;s elements matches an empty list, an error tuple is returned with a
-reason.</p><p>Pattern matching is also used when the elements list is non empty.
+reason.</p>
+<p>Pattern matching is also used when the elements list is non empty.
 In this case, the <code>head</code> and <code>tail</code> of the elements list is matched against.
 The Stack then has its elements updated to be the matched <code>tail</code> and a tuple is
-returned consisting of a <code>:ok</code> atom, the matched <code>head</code>, and the updated Stack.</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+returned consisting of a <code>:ok</code> atom, the matched <code>head</code>, and the updated Stack.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Pop an item off the top of the stack
 </span><span class=sh>
 </span><span class=sh>  </span><span class=err>##</span><span class=sh> Examples
@@ -93,11 +167,14 @@ returned consisting of a <code>:ok</code> atom, the matched <code>head</code>, a
   <span class=na>@spec</span> <span class=n>pop</span><span class=p>(</span><span class=n>__MODULE__</span><span class=o>.</span><span class=n>t</span><span class=p>())</span> <span class=o>::</span> <span class=p>{</span><span class=ss>:error</span><span class=p>,</span> <span class=nc>String</span><span class=o>.</span><span class=n>t</span><span class=p>()}</span> <span class=o>|</span> <span class=p>{</span><span class=ss>:ok</span><span class=p>,</span> <span class=n>any</span><span class=p>(),</span> <span class=n>__MODULE__</span><span class=o>.</span><span class=n>t</span><span class=p>()}</span>
   <span class=kd>def</span> <span class=n>pop</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=p>[]}),</span> <span class=ss>do</span><span class=p>:</span> <span class=p>{</span><span class=ss>:error</span><span class=p>,</span> <span class=s2>&#34;Empty Stack&#34;</span><span class=p>}</span>
   <span class=kd>def</span> <span class=n>pop</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>top</span> <span class=o>|</span> <span class=n>rest</span><span class=p>]}),</span> <span class=ss>do</span><span class=p>:</span> <span class=p>{</span><span class=ss>:ok</span><span class=p>,</span> <span class=n>top</span><span class=p>,</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=n>rest</span><span class=p>}}</span>
-</code></pre></div><h3 id=empty>Empty<a href=#empty class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>The empty operation is quite simple using pattern matching.</p><p>If the Stack&rsquo;s elements matches a non empty list, we return <code>false</code>.
+</code></pre></div><h3 id=empty>Empty<a href=#empty class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>The empty operation is quite simple using pattern matching.</p>
+<p>If the Stack&rsquo;s elements matches a non empty list, we return <code>false</code>.
 Otherwise, return <code>true</code>.
 The <a href=https://hexdocs.pm/elixir/master/naming-conventions.html#trailing-question-mark-foo>trailing question
 mark</a>
-naming convention is used in the implementation.</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+naming convention is used in the implementation.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  Check if stack is empty
 </span><span class=sh>
 </span><span class=sh>  </span><span class=err>##</span><span class=sh> Examples
@@ -109,11 +186,46 @@ naming convention is used in the implementation.</p><div class=highlight><pre cl
 </span><span class=sh>  &#34;&#34;&#34;</span>
   <span class=kd>def</span> <span class=n>empty?</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=p>[</span><span class=n>_head</span> <span class=o>|</span> <span class=n>_tail</span><span class=p>]}),</span> <span class=ss>do</span><span class=p>:</span> <span class=no>false</span>
   <span class=kd>def</span> <span class=n>empty?</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>elements</span><span class=p>:</span> <span class=p>[]}),</span> <span class=ss>do</span><span class=p>:</span> <span class=no>true</span>
-</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>Stacks are a rudimentary data structure but they are used constantly in
+</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Stacks are a rudimentary data structure but they are used constantly in
 programming.
 They help us allocate memory, parse code, add ways to undo actions, and much
-more.</p><p>Implementing a Stack in Elixir is really just sugar for built in Elixir lists
-but was a nice way to get acquainted with pattern matching and structs.</p><p><a href=https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/stack.ex>Click for the full
-implementation</a>.</p><p><a href=https://github.com/SamuelWillis/algorithms/tree/main/notes/data-structures/stack>And here is my full set of Stack
-notes</a>.</p></div><hr class=post-end><footer class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span></p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>672 Words</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-04-11 21:12 +0000</p></footer></article><div class="post-nav thin"><a class=next-post href=https://www.samuelwillis.dev/posts/queues-in-elixir/><span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Queues in Elixir</span></a>
-<a class=prev-post href=https://www.samuelwillis.dev/posts/hello-world/><span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Hello World</span></a></div><div id=comments class=thin></div></main><footer id=site-footer class="section-inner thin animated fadeIn faster"><p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p><p>Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></p></footer><script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script><script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script><script async src=https://www.google-analytics.com/analytics.js></script></body></html>
+more.</p>
+<p>Implementing a Stack in Elixir is really just sugar for built in Elixir lists
+but was a nice way to get acquainted with pattern matching and structs.</p>
+<p><a href=https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/stack.ex>Click for the full
+implementation</a>.</p>
+<p><a href=https://github.com/SamuelWillis/algorithms/tree/main/notes/data-structures/stack>And here is my full set of Stack
+notes</a>.</p>
+</div>
+<hr class=post-end>
+<footer class=post-info>
+<p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span>
+</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>672 Words</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-04-11 21:12 +0000</p>
+</footer>
+</article>
+<div class="post-nav thin">
+<a class=next-post href=https://www.samuelwillis.dev/posts/queues-in-elixir/>
+<span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Queues in Elixir</span>
+</a>
+<a class=prev-post href=https://www.samuelwillis.dev/posts/hello-world/>
+<span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Hello World</span>
+</a>
+</div>
+<div id=comments class=thin>
+</div>
+</main>
+<footer id=site-footer class="section-inner thin animated fadeIn faster">
+<p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p>
+<p>
+Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a>
+</p>
+</footer>
+<script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script>
+<script async src=https://www.google-analytics.com/analytics.js></script>
+</body>
+</html>

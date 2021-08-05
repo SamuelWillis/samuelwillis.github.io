@@ -1,0 +1,345 @@
+<!doctype html><html lang=en-us>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta http-equiv=x-ua-compatible content="ie=edge">
+<meta itemprop=name content="Heap Sort, Part 2">
+<meta itemprop=description content="Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
+Insertion will work using two traversals of the heap, the first finding the next available leaf and the second bubbling the new value up the heap to maintain the max heap property.
+Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that updates the heap&rsquo;s height, size, and children."><meta itemprop=datePublished content="2021-06-01T09:00:00-06:00">
+<meta itemprop=dateModified content="2021-06-01T09:00:00-06:00">
+<meta itemprop=wordCount content="1373">
+<meta itemprop=keywords content="Elixir,Algorithms,DataStructures,Implementation,Code,Sorting,Heapsort,Heaps,Functional,"><meta property="og:title" content="Heap Sort, Part 2">
+<meta property="og:description" content="Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
+Insertion will work using two traversals of the heap, the first finding the next available leaf and the second bubbling the new value up the heap to maintain the max heap property.
+Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that updates the heap&rsquo;s height, size, and children.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.samuelwillis.dev/posts/heap-sort-part-2/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-06-01T09:00:00-06:00">
+<meta property="article:modified_time" content="2021-06-01T09:00:00-06:00">
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="Heap Sort, Part 2">
+<meta name=twitter:description content="Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
+Insertion will work using two traversals of the heap, the first finding the next available leaf and the second bubbling the new value up the heap to maintain the max heap property.
+Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that updates the heap&rsquo;s height, size, and children.">
+<link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
+<link rel=manifest href=/site.webmanifest>
+<link rel=mask-icon href=/safari-pinned-tab.svg color>
+<link rel="shortcut icon" href=/favicon.ico>
+<title>Heap Sort, Part 2</title>
+<link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous>
+</head>
+<body id=page>
+<header id=site-header class="animated slideInUp">
+<div class="hdr-wrapper section-inner">
+<div class=hdr-left>
+<div class=site-branding>
+<a href=https://www.samuelwillis.dev>samuel willis</a>
+</div>
+<nav class="site-nav hide-in-mobile">
+<a href=https://www.samuelwillis.dev/about/>about</a>
+<a href=https://www.samuelwillis.dev/posts/>posts</a>
+</nav>
+</div>
+<div class="hdr-right hdr-icons">
+<span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+</div>
+</div>
+</header>
+<div id=mobile-menu class="animated fast">
+<ul>
+<li><a href=https://www.samuelwillis.dev/about/>about</a></li>
+<li><a href=https://www.samuelwillis.dev/posts/>posts</a></li>
+</ul>
+</div>
+<main class="site-main section-inner animated fadeIn faster">
+<article class=thin>
+<header class=post-header>
+<div class=post-meta><span>Jun 1, 2021</span></div>
+<h1>Heap Sort, Part 2</h1>
+</header>
+<div class=content>
+<p>Following from <a href=https://www.samuelwillis.dev/posts/heap-sort-part-1/>Part One</a> in this heapsort
+series, this post will go over <code>O(log(n))</code> insertions into the Heap.</p>
+<p>Insertion will work using two traversals of the heap, the first finding the
+next available leaf and the second bubbling the new value up the heap to
+maintain the max heap property.</p>
+<p>Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that
+updates the heap&rsquo;s height, size, and children.</p>
+<p>Since there is two traversals, I&rsquo;ll split the implementation up into two
+portions.
+The first traversal down to the next available leaf and then the second
+traversal to bubble the new value to its correct spot in the heap.</p>
+<h2 id=finding-the-leaf>Finding the leaf<a href=#finding-the-leaf class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Finding the next available leaf was probably one of the trickier parts of the
+insertion.
+In the end, it hinges on the array definition of a heap and the index of a
+leaf&rsquo;s parent in the array.</p>
+<p>To start, we will do the 3 base clauses:</p>
+<ol>
+<li>Insertion into empty heap => set the heap&rsquo;s value.</li>
+<li>Insertion into a heap that is a leaf => add a left child to the parent heap
+that has the value being inserted.</li>
+<li>Insertion into a heap that does not have a right child => add a right child
+to the parent heap that has the value being inserted.</li>
+</ol>
+<p>These clauses are the simple cases and cover &ldquo;filling&rdquo; a heap.
+To implement them a custom guard will be used to determine if a heap is a leaf
+or not.
+A heap is considered a leaf if it has no children.</p>
+<p>In each clause, a new heap will be created that includes the new value at the
+appropriate place and the new size of the heap.</p>
+<p>Notice only the clauses that add a value to an empty heap or the left child will
+increase the heap&rsquo;s height, however.
+This is because adding a right child to a heap does not increase the heap&rsquo;s
+height.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=n>defguard</span> <span class=n>is_empty</span><span class=p>(</span><span class=n>heap</span><span class=p>)</span> <span class=ow>when</span> <span class=n>heap</span><span class=o>.</span><span class=n>size</span> <span class=o>==</span> <span class=mi>0</span>
+
+  <span class=n>defguard</span> <span class=n>is_leaf</span><span class=p>(</span><span class=n>heap</span><span class=p>)</span> <span class=ow>when</span> <span class=n>is_nil</span><span class=p>(</span><span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=p>)</span> <span class=ow>and</span> <span class=n>is_nil</span><span class=p>(</span><span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=p>)</span>
+
+  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+</span><span class=sh>  Push the new value into the heap.
+</span><span class=sh>  &#34;&#34;&#34;</span>
+  <span class=na>@spec</span> <span class=n>push</span><span class=p>(</span><span class=n>t</span><span class=p>(),</span> <span class=n>integer</span><span class=p>())</span> <span class=o>::</span> <span class=n>t</span><span class=p>()</span>
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span> <span class=ow>when</span> <span class=n>is_empty</span><span class=p>(</span><span class=n>heap</span><span class=p>),</span>
+    <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>value</span><span class=p>:</span> <span class=n>value</span><span class=p>,</span> <span class=ss>height</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=mi>1</span><span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>height</span><span class=p>:</span> <span class=n>height</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+    <span class=ow>when</span> <span class=n>is_leaf</span><span class=p>(</span><span class=n>heap</span><span class=p>),</span>
+    <span class=ss>do</span><span class=p>:</span>
+      <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>height</span><span class=p>:</span> <span class=n>height</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+          <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+          <span class=c1># Push the value onto an empty heap</span>
+          <span class=ss>left</span><span class=p>:</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{},</span> <span class=n>value</span><span class=p>)</span>
+      <span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>,</span> <span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span> <span class=ss>right</span><span class=p>:</span> <span class=n>right</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+    <span class=ow>when</span> <span class=n>is_nil</span><span class=p>(</span><span class=n>right</span><span class=p>),</span>
+    <span class=ss>do</span><span class=p>:</span>
+      <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+          <span class=c1># push the value onto a empty heap</span>
+          <span class=ss>right</span><span class=p>:</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{},</span> <span class=n>value</span><span class=p>)</span>
+      <span class=p>}</span>
+</code></pre></div><p>The remaining two clauses need to determine if the next available spot is in the
+left or right child heaps.</p>
+<p>The trick to this is finding the next available leaf&rsquo;s parent index if it were
+an array implementation.</p>
+<p>Given a the size of the heap with the new value inserted, the node will be in
+the left subtree if the parent index is divisible by 2, due to the array
+index definitions <code>left_child_index(i): 2*i</code> and <code>parent_index(i): floor(i/2)</code>.</p>
+<p>Similarily, the new node will be in the right subtree if the parent index is not
+divisible by 2, again from the array index definitions <code>right(i): 2*i + 1</code> and
+<code>parent(i): floor(i/2)</code>.</p>
+<p>So the last two clauses will build a new heap with the new value inserted into
+the appropriate subtree.
+The new heap will have the updated size, as well as a new height.
+The height is determined to be the max height of the heap&rsquo;s subtrees plus 1.</p>
+<p>Using guards to makes this really expresive:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=n>defguard</span> <span class=n>is_next_leaf_in_left_subtree</span><span class=p>(</span><span class=n>size</span><span class=p>)</span> <span class=ow>when</span> <span class=n>size</span> <span class=o>|&gt;</span> <span class=n>div</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>|&gt;</span> <span class=n>rem</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span>
+  <span class=n>defguard</span> <span class=n>is_next_leaf_in_right_subtree</span><span class=p>(</span><span class=n>size</span><span class=p>)</span> <span class=ow>when</span> <span class=n>size</span> <span class=o>|&gt;</span> <span class=n>div</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>|&gt;</span> <span class=n>rem</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span>
+
+  <span class=na>@spec</span> <span class=n>push</span><span class=p>(</span><span class=n>t</span><span class=p>(),</span> <span class=n>integer</span><span class=p>())</span> <span class=o>::</span> <span class=n>t</span><span class=p>()</span>
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span> <span class=ss>right</span><span class=p>:</span> <span class=n>right</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>is_next_leaf_in_left_subtree</span><span class=p>(</span><span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=k>do</span>
+    <span class=n>new_left</span> <span class=o>=</span> <span class=n>push</span><span class=p>(</span><span class=n>left</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+
+    <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+      <span class=n>heap</span>
+      <span class=o>|</span> <span class=ss>height</span><span class=p>:</span> <span class=n>max</span><span class=p>(</span><span class=n>new_left</span><span class=o>.</span><span class=n>height</span><span class=p>,</span> <span class=n>right</span><span class=o>.</span><span class=n>height</span><span class=p>)</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>left</span><span class=p>:</span> <span class=n>new_left</span><span class=p>,</span>
+        <span class=ss>right</span><span class=p>:</span> <span class=n>right</span>
+    <span class=p>}</span>
+  <span class=k>end</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span> <span class=ss>right</span><span class=p>:</span> <span class=n>right</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>is_next_leaf_in_right_subtree</span><span class=p>(</span><span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=k>do</span>
+    <span class=n>new_right</span> <span class=o>=</span> <span class=n>push</span><span class=p>(</span><span class=n>right</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+
+    <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+      <span class=n>heap</span>
+      <span class=o>|</span> <span class=ss>height</span><span class=p>:</span> <span class=n>max</span><span class=p>(</span><span class=n>left</span><span class=o>.</span><span class=n>height</span><span class=p>,</span> <span class=n>new_right</span><span class=o>.</span><span class=n>height</span><span class=p>)</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span>
+        <span class=ss>right</span><span class=p>:</span> <span class=n>new_right</span>
+    <span class=p>}</span>
+  <span class=k>end</span>
+</code></pre></div><p>Now that we&rsquo;ve handled pushing a new value onto the heap at the correct place,
+we need to ensure that the max-heap property is maintained.</p>
+<p>To do this we need to bubble up the inserted value to the correct position in
+the heap it was inserted into.</p>
+<h2 id=bubble-up-routine>Bubble up routine<a href=#bubble-up-routine class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>To bubble the new value up to its proper position in the heap a bubble up
+routine will be needed.</p>
+<p>The routine will accept a Heap struct and check the root value against the
+children values, swapping them if needed to maintain the mx heap property.</p>
+<p>There are 3 cases:</p>
+<ol>
+<li>The right value is larger than the left value and root value</li>
+<li>The left value is larger than the right value and root value</li>
+<li>The root is the largest value</li>
+</ol>
+<p>In case 1, the root value is swapped with the right value, in case 2 the root
+value is swapped with the left value, and in case 3 nothing is swapped and the
+original heap is returned.</p>
+<p>Implementing this can be written very clearly using function clauses, pattern
+matching, and guards in Elixir.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir>  <span class=na>@spec</span> <span class=n>bubble_up</span><span class=p>(</span><span class=n>heap</span> <span class=o>::</span> <span class=n>t</span><span class=p>())</span> <span class=o>::</span> <span class=n>t</span><span class=p>()</span>
+  <span class=kd>def</span> <span class=n>bubble_up</span><span class=p>(</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{},</span> <span class=ss>right</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{}}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span> <span class=o>&lt;</span> <span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=o>.</span><span class=n>value</span> <span class=ow>and</span>
+             <span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=o>.</span><span class=n>value</span> <span class=o>&lt;</span> <span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+      <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+          <span class=ss>right</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{</span><span class=n>heap</span><span class=o>.</span><span class=n>right</span> <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span><span class=p>}</span>
+      <span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>bubble_up</span><span class=p>(</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{}}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span> <span class=o>&lt;</span> <span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+      <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+          <span class=ss>left</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{</span><span class=n>heap</span><span class=o>.</span><span class=n>left</span> <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span><span class=p>}</span>
+      <span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>bubble_up</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>),</span> <span class=ss>do</span><span class=p>:</span> <span class=n>heap</span>
+</code></pre></div><p>Now the routine needs to be used by the <code>push</code> function.</p>
+<h3 id=putting-it-all-together>Putting it all together<a href=#putting-it-all-together class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>Putting all the above together the resulting code is quite lengthy but still
+expressive in its intent.</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Heap</span> <span class=k>do</span>
+  <span class=n>defguard</span> <span class=n>is_empty</span><span class=p>(</span><span class=n>heap</span><span class=p>)</span> <span class=ow>when</span> <span class=n>heap</span><span class=o>.</span><span class=n>size</span> <span class=o>==</span> <span class=mi>0</span>
+
+  <span class=n>defguard</span> <span class=n>is_leaf</span><span class=p>(</span><span class=n>heap</span><span class=p>)</span> <span class=ow>when</span> <span class=n>is_nil</span><span class=p>(</span><span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=p>)</span> <span class=ow>and</span> <span class=n>is_nil</span><span class=p>(</span><span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=p>)</span>
+
+  <span class=n>defguard</span> <span class=n>is_next_leaf_in_left_subtree</span><span class=p>(</span><span class=n>size</span><span class=p>)</span> <span class=ow>when</span> <span class=n>size</span> <span class=o>|&gt;</span> <span class=n>div</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>|&gt;</span> <span class=n>rem</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span>
+  <span class=n>defguard</span> <span class=n>is_next_leaf_in_right_subtree</span><span class=p>(</span><span class=n>size</span><span class=p>)</span> <span class=ow>when</span> <span class=n>size</span> <span class=o>|&gt;</span> <span class=n>div</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>|&gt;</span> <span class=n>rem</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span>
+
+  <span class=na>@doc</span> <span class=sh>&#34;&#34;&#34;
+</span><span class=sh>  Push the new value into the heap.
+</span><span class=sh>  &#34;&#34;&#34;</span>
+  <span class=na>@spec</span> <span class=n>push</span><span class=p>(</span><span class=n>t</span><span class=p>(),</span> <span class=n>integer</span><span class=p>())</span> <span class=o>::</span> <span class=n>t</span><span class=p>()</span>
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span> <span class=ow>when</span> <span class=n>is_empty</span><span class=p>(</span><span class=n>heap</span><span class=p>),</span>
+    <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>value</span><span class=p>:</span> <span class=n>value</span><span class=p>,</span> <span class=ss>height</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=mi>1</span><span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>height</span><span class=p>:</span> <span class=n>height</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+    <span class=ow>when</span> <span class=n>is_leaf</span><span class=p>(</span><span class=n>heap</span><span class=p>),</span>
+    <span class=ss>do</span><span class=p>:</span>
+      <span class=n>bubble_up</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>height</span><span class=p>:</span> <span class=n>height</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+          <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+          <span class=ss>left</span><span class=p>:</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{},</span> <span class=n>value</span><span class=p>)</span>
+      <span class=p>})</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>,</span> <span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span> <span class=ss>right</span><span class=p>:</span> <span class=n>right</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+    <span class=ow>when</span> <span class=n>is_nil</span><span class=p>(</span><span class=n>right</span><span class=p>),</span>
+    <span class=ss>do</span><span class=p>:</span>
+      <span class=n>bubble_up</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+          <span class=ss>right</span><span class=p>:</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{},</span> <span class=n>value</span><span class=p>)</span>
+      <span class=p>})</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span> <span class=ss>right</span><span class=p>:</span> <span class=n>right</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>is_next_leaf_in_left_subtree</span><span class=p>(</span><span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=k>do</span>
+    <span class=n>new_left</span> <span class=o>=</span> <span class=n>push</span><span class=p>(</span><span class=n>left</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+
+    <span class=n>bubble_up</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+      <span class=n>heap</span>
+      <span class=o>|</span> <span class=ss>height</span><span class=p>:</span> <span class=n>max</span><span class=p>(</span><span class=n>new_left</span><span class=o>.</span><span class=n>height</span><span class=p>,</span> <span class=n>right</span><span class=o>.</span><span class=n>height</span><span class=p>)</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>left</span><span class=p>:</span> <span class=n>new_left</span><span class=p>,</span>
+        <span class=ss>right</span><span class=p>:</span> <span class=n>right</span>
+    <span class=p>})</span>
+  <span class=k>end</span>
+
+  <span class=kd>def</span> <span class=n>push</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span> <span class=ss>right</span><span class=p>:</span> <span class=n>right</span><span class=p>,</span> <span class=ss>size</span><span class=p>:</span> <span class=n>size</span><span class=p>}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>is_next_leaf_in_right_subtree</span><span class=p>(</span><span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=k>do</span>
+    <span class=n>new_right</span> <span class=o>=</span> <span class=n>push</span><span class=p>(</span><span class=n>right</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span>
+
+    <span class=n>bubble_up</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+      <span class=n>heap</span>
+      <span class=o>|</span> <span class=ss>height</span><span class=p>:</span> <span class=n>max</span><span class=p>(</span><span class=n>left</span><span class=o>.</span><span class=n>height</span><span class=p>,</span> <span class=n>new_right</span><span class=o>.</span><span class=n>height</span><span class=p>)</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>size</span><span class=p>:</span> <span class=n>size</span> <span class=o>+</span> <span class=mi>1</span><span class=p>,</span>
+        <span class=ss>left</span><span class=p>:</span> <span class=n>left</span><span class=p>,</span>
+        <span class=ss>right</span><span class=p>:</span> <span class=n>new_right</span>
+    <span class=p>})</span>
+  <span class=k>end</span>
+
+  <span class=na>@spec</span> <span class=n>bubble_up</span><span class=p>(</span><span class=n>heap</span> <span class=o>::</span> <span class=n>t</span><span class=p>())</span> <span class=o>::</span> <span class=n>t</span><span class=p>()</span>
+  <span class=kd>def</span> <span class=n>bubble_up</span><span class=p>(</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{},</span> <span class=ss>right</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{}}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span> <span class=o>&lt;</span> <span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=o>.</span><span class=n>value</span> <span class=ow>and</span>
+             <span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=o>.</span><span class=n>value</span> <span class=o>&lt;</span> <span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+      <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>right</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+          <span class=ss>right</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{</span><span class=n>heap</span><span class=o>.</span><span class=n>right</span> <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span><span class=p>}</span>
+      <span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>bubble_up</span><span class=p>(</span><span class=n>__MODULE__</span><span class=p>{</span><span class=ss>left</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{}}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>)</span>
+      <span class=ow>when</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span> <span class=o>&lt;</span> <span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+      <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{</span>
+        <span class=n>heap</span>
+        <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>left</span><span class=o>.</span><span class=n>value</span><span class=p>,</span>
+          <span class=ss>left</span><span class=p>:</span> <span class=n>__MODULE__</span><span class=p>{</span><span class=n>heap</span><span class=o>.</span><span class=n>left</span> <span class=o>|</span> <span class=ss>value</span><span class=p>:</span> <span class=n>heap</span><span class=o>.</span><span class=n>value</span><span class=p>}</span>
+      <span class=p>}</span>
+
+  <span class=kd>def</span> <span class=n>bubble_up</span><span class=p>(</span><span class=err>%</span><span class=n>__MODULE__</span><span class=p>{}</span> <span class=o>=</span> <span class=n>heap</span><span class=p>),</span> <span class=ss>do</span><span class=p>:</span> <span class=n>heap</span>
+<span class=k>end</span>
+</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Although complicated, Elixir really helped with writing clear and intention
+revealing code through guards and pattern matching.</p>
+<p>I can&rsquo;t help but attribute this to the lack of <code>if</code> statements needed inside of
+functions, but that&rsquo;s a discussion for another day.</p>
+<p>A downside to this code is, although it&rsquo;s intention revealing, it&rsquo;s likely less
+perfomant than an iterative implementation.
+There&rsquo;s a lot of memory use behind the creation of new heaps each time we need
+to update a value.</p>
+<p>Elixir&rsquo;s immutability is a hinderance here but it is maybe offset somewhat by
+garbage collection being able to dispose of the intermediary heaps as soon as
+they&rsquo;re no longer in use.
+I do not fully understand garbage collection in Elixir yet, but I believe this
+is the case.</p>
+<p>If you&rsquo;re interested in the full implementation of a Heap, <a href=https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/heap.ex>see it
+here</a>.</p>
+<p>If you have comments, improvements, or corrections please feel free to leave an
+<a href=https://github.com/SamuelWillis/algorithms/issues>issue in Github</a>.</p>
+</div>
+<hr class=post-end>
+<footer class=post-info>
+<p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/algorithms>Algorithms</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/sorting>Sorting</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heapsort>Heapsort</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heaps>Heaps</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/functional>Functional</a></span>
+</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>1373 Words</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-06-01 15:00 +0000</p>
+</footer>
+</article>
+<div class="post-nav thin">
+<a class=next-post href=https://www.samuelwillis.dev/posts/heap-sort-part-1/>
+<span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Heap Sort, Part 1</span>
+</a>
+<a class=prev-post href=https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/>
+<span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Max Subarray in Elixir</span>
+</a>
+</div>
+<div id=comments class=thin>
+</div>
+</main>
+<footer id=site-footer class="section-inner thin animated fadeIn faster">
+<p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p>
+<p>
+Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a>
+</p>
+</footer>
+<script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script>
+<script async src=https://www.google-analytics.com/analytics.js></script>
+</body>
+</html>

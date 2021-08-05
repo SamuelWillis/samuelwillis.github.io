@@ -1,39 +1,174 @@
-<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="ie=edge"><meta itemprop=name content="Heap Sort, Part 1"><meta itemprop=description content="This is the first of a multi-part series on Heapsort.
+<!doctype html><html lang=en-us>
+<head>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta http-equiv=x-ua-compatible content="ie=edge">
+<meta itemprop=name content="Heap Sort, Part 1">
+<meta itemprop=description content="This is the first of a multi-part series on Heapsort.
 While the Heapsort algorithm itself is a fairly simple algorithm, it poses some complexity when implemented in an immutable language that does not support index based arrays, such as Elixir.
-This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however."><meta itemprop=datePublished content="2021-06-01T09:00:00-06:00"><meta itemprop=dateModified content="2021-06-01T09:00:00-06:00"><meta itemprop=wordCount content="871"><meta itemprop=keywords content="Elixir,Algorithms,DataStructures,Implementation,Code,Sorting,Heapsort,Heaps,Functional,"><meta property="og:title" content="Heap Sort, Part 1"><meta property="og:description" content="This is the first of a multi-part series on Heapsort.
+This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however."><meta itemprop=datePublished content="2021-06-01T09:00:00-06:00">
+<meta itemprop=dateModified content="2021-06-01T09:00:00-06:00">
+<meta itemprop=wordCount content="871">
+<meta itemprop=keywords content="Elixir,Algorithms,DataStructures,Implementation,Code,Sorting,Heapsort,Heaps,Functional,"><meta property="og:title" content="Heap Sort, Part 1">
+<meta property="og:description" content="This is the first of a multi-part series on Heapsort.
 While the Heapsort algorithm itself is a fairly simple algorithm, it poses some complexity when implemented in an immutable language that does not support index based arrays, such as Elixir.
-This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however."><meta property="og:type" content="article"><meta property="og:url" content="https://www.samuelwillis.dev/posts/heap-sort-part-1/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-06-01T09:00:00-06:00"><meta property="article:modified_time" content="2021-06-01T09:00:00-06:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Heap Sort, Part 1"><meta name=twitter:description content="This is the first of a multi-part series on Heapsort.
+This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.samuelwillis.dev/posts/heap-sort-part-1/"><meta property="article:section" content="posts">
+<meta property="article:published_time" content="2021-06-01T09:00:00-06:00">
+<meta property="article:modified_time" content="2021-06-01T09:00:00-06:00">
+<meta name=twitter:card content="summary">
+<meta name=twitter:title content="Heap Sort, Part 1">
+<meta name=twitter:description content="This is the first of a multi-part series on Heapsort.
 While the Heapsort algorithm itself is a fairly simple algorithm, it poses some complexity when implemented in an immutable language that does not support index based arrays, such as Elixir.
-This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however."><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/safari-pinned-tab.svg color><link rel="shortcut icon" href=/favicon.ico><title>Heap Sort, Part 1</title><link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous></head><body id=page><header id=site-header class="animated slideInUp"><div class="hdr-wrapper section-inner"><div class=hdr-left><div class=site-branding><a href=https://www.samuelwillis.dev>samuel willis</a></div><nav class="site-nav hide-in-mobile"><a href=https://www.samuelwillis.dev/about/>about</a>
-<a href=https://www.samuelwillis.dev/posts/>posts</a></nav></div><div class="hdr-right hdr-icons"><span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div></div></header><div id=mobile-menu class="animated fast"><ul><li><a href=https://www.samuelwillis.dev/about/>about</a></li><li><a href=https://www.samuelwillis.dev/posts/>posts</a></li></ul></div><main class="site-main section-inner animated fadeIn faster"><article class=thin><header class=post-header><div class=post-meta><span>Jun 1, 2021</span></div><h1>Heap Sort, Part 1</h1></header><div class=content><p>This is the first of a multi-part series on Heapsort.</p><p>While the Heapsort algorithm itself is a fairly simple algorithm, it poses some
+This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however.">
+<link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png>
+<link rel=manifest href=/site.webmanifest>
+<link rel=mask-icon href=/safari-pinned-tab.svg color>
+<link rel="shortcut icon" href=/favicon.ico>
+<title>Heap Sort, Part 1</title>
+<link rel=stylesheet href=https://www.samuelwillis.dev/css/style.min.f74778e3020c87c304fb5982e09b92ba63a5c7f202996d4c7283d6057acfe9c1.css integrity="sha256-90d44wIMh8ME+1mC4JuSumOlx/ICmW1McoPWBXrP6cE=" crossorigin=anonymous>
+</head>
+<body id=page>
+<header id=site-header class="animated slideInUp">
+<div class="hdr-wrapper section-inner">
+<div class=hdr-left>
+<div class=site-branding>
+<a href=https://www.samuelwillis.dev>samuel willis</a>
+</div>
+<nav class="site-nav hide-in-mobile">
+<a href=https://www.samuelwillis.dev/about/>about</a>
+<a href=https://www.samuelwillis.dev/posts/>posts</a>
+</nav>
+</div>
+<div class="hdr-right hdr-icons">
+<span class="hdr-social hide-in-mobile"><a href=mailto:samuel.w.h.willis@gmail.com target=_blank rel="noopener me" title=Email><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1.0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1.0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a><a href=https://github.com/SamuelWillis target=_blank rel="noopener me" title=Github><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></a><a href=https://www.linkedin.com/in/willissamuel/ target=_blank rel="noopener me" title=Linkedin><svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></span><button id=menu-btn class=hdr-btn title=Menu><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+</div>
+</div>
+</header>
+<div id=mobile-menu class="animated fast">
+<ul>
+<li><a href=https://www.samuelwillis.dev/about/>about</a></li>
+<li><a href=https://www.samuelwillis.dev/posts/>posts</a></li>
+</ul>
+</div>
+<main class="site-main section-inner animated fadeIn faster">
+<article class=thin>
+<header class=post-header>
+<div class=post-meta><span>Jun 1, 2021</span></div>
+<h1>Heap Sort, Part 1</h1>
+</header>
+<div class=content>
+<p>This is the first of a multi-part series on Heapsort.</p>
+<p>While the Heapsort algorithm itself is a fairly simple algorithm, it poses some
 complexity when implemented in an immutable language that does not support index
-based arrays, such as Elixir.</p><p>This is because of the Heap data structure that Heapsort relies on.
+based arrays, such as Elixir.</p>
+<p>This is because of the Heap data structure that Heapsort relies on.
 In imperative languages a Heap is trivially implemented through the use of an
 array and calculated indexes. Elixir does not provide us with this luxury,
-however.</p><p>In this series of posts I will showcase an implementation of Heaps using
+however.</p>
+<p>In this series of posts I will showcase an implementation of Heaps using
 pointers that maintains the <code>O(log(n))</code> insertion and removal of elements.
-It will then be used to implement Heapsort.</p><p>The series will be broken up into 4 parts:</p><ol><li>Introduction to Heap Data Structure (this post)</li><li><code>O(log(n))</code> insertions with Heap</li><li><code>O(log(n))</code> removals with Heap</li><li>Heapsort implementation using the Heap</li></ol><h2 id=citations>Citations<a href=#citations class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>Before we proceed, I would like to give cite some resources that I used to write
-this code.</p><p>Without these resources, I would probably still be scratching my head in
+It will then be used to implement Heapsort.</p>
+<p>The series will be broken up into 4 parts:</p>
+<ol>
+<li>Introduction to Heap Data Structure (this post)</li>
+<li><code>O(log(n))</code> insertions with Heap</li>
+<li><code>O(log(n))</code> removals with Heap</li>
+<li>Heapsort implementation using the Heap</li>
+</ol>
+<h2 id=citations>Citations<a href=#citations class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Before we proceed, I would like to give cite some resources that I used to write
+this code.</p>
+<p>Without these resources, I would probably still be scratching my head in
 confusion and I found them to be indispensable while working this Heapsort
 implementation.
-Especially for the insertion and removal procedures in <code>O(log(n))</code> time.</p><p>Each resource is also cited in the final implementation&rsquo;s source code.</p><ol><li><a href=https://www.cpp.edu/~ftang/courses/CS241/notes/Building_Heaps_With_Pointers.pdf>Paul Picazo&rsquo;s paper on
-Peaps</a><ul><li>Provided a much simplified algorithm to find the next place to insert a new
-element</li></ul></li><li>Vladimir Kostyukov&rsquo;s <a href=https://kostyukov.net/posts/designing-a-pfds/>Scala Heap Blog Post</a><ul><li>A great write up on transforming imperative/RAM based algorithms into
-functional ones.</li><li>Focussed on implementing a Heap in Scala</li></ul></li><li>Vladimir Kostyukov&rsquo;s <a href=http://arxiv.org/pdf/1312.4666v1.pdf>paper</a><ul><li>A more complete version of their blog post</li><li>Includes efficient algorithm for element removal</li></ul></li><li>Vladimir Kostyukov&rsquo;s <a href=https://github.com/vkostyukov/scalacaster/blob/master/src/heap/StandardHeap.scala>source code</a><ul><li>Scala source code for their own implementation.</li></ul></li></ol><p>Thank you Paul and Vladimir for such great source material.</p><h2 id=heap-sort>Heap Sort<a href=#heap-sort class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>Heap sort uses the properties of Heaps to sort an array.</p><p>It works as follows:</p><ol><li>Place all elements of array into a heap</li><li>Repeatedly remove the root element of the heap and insert it into the array</li></ol><p>The <em>Heap Property</em> ensures that the resulting array is in sorted order.</p><h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>To start the implementation of heap sort, we will need an efficient heap.
-This will be represented by a module with schema in Elixir.</p><h3 id=the-heap-data-structure>The heap data structure<a href=#the-heap-data-structure class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>With the house-keeping out of the way let&rsquo;s introduce the heap data structure.</p><p>There are two properties that a Heap has:</p><ol><li><strong>Shape Property:</strong> Heaps are <em>complete binary trees</em>. Meaning all levels, except possibly the
-last one, are fully filled and all nodes are filled from left to right.</li><li><strong>Heap Property:</strong> The key stored in each node is either greater than or equal to (<em>max-heap</em>) or less than or
-equal to (<em>min-heap</em>) the keys in the node&rsquo;s children</li></ol><p>Some other useful properties are:</p><ol><li>The left child index of a node in an array representation of a heap is given
-by <code>2*i</code> where <code>i</code> is the index of the node in the array.</li><li>The right child index of a node in an array representation of a heap is given
-by <code>2*i + 1</code> where <code>i</code> is the index of the node in the array.</li><li>The maximum number of nodes in a complete binary tree is <code>2^(h) - 1</code> where
-<code>h</code> is the height of the tree. A tree of only a root node has a height of <code>0</code>.</li></ol><h3 id=code>Code<a href=#code class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3><p>This implementation of a heap will be recursive.
-Meaning each node in the heap will itself be a heap.</p><p>In the heap we will want to track several things:</p><ol><li>The <strong>value</strong> of the heap</li><li>The <strong>size</strong> of the heap, ie: the number of nodes in the heap</li><li>The <strong>height</strong> of the heap, ie: the largest number of edges from a leaf to
-the node.</li><li>The <strong>left child</strong> of the heap</li><li>The <strong>right child</strong> of the heap</li></ol><p>To start this implementation, lets configure a struct that will represent a
-<code>Heap</code>.</p><p>The struct will define the supported fields, with some sensible defaults for
-empty heaps, as well as a <em>typespec</em>.</p><p>In an empty Heap, the value and children will be <code>nil</code> and the <code>height</code> and
-<code>size</code> will be <code>0</code>.</p><p>The typespec for the Heap will type the <code>value</code> as an integer for simplicities'
-sake.</p><p>We will also add a simple function called <code>new</code> that will return a new <code>Heap</code>
+Especially for the insertion and removal procedures in <code>O(log(n))</code> time.</p>
+<p>Each resource is also cited in the final implementation&rsquo;s source code.</p>
+<ol>
+<li><a href=https://www.cpp.edu/~ftang/courses/CS241/notes/Building_Heaps_With_Pointers.pdf>Paul Picazo&rsquo;s paper on
+Peaps</a>
+<ul>
+<li>Provided a much simplified algorithm to find the next place to insert a new
+element</li>
+</ul>
+</li>
+<li>Vladimir Kostyukov&rsquo;s <a href=https://kostyukov.net/posts/designing-a-pfds/>Scala Heap Blog Post</a>
+<ul>
+<li>A great write up on transforming imperative/RAM based algorithms into
+functional ones.</li>
+<li>Focussed on implementing a Heap in Scala</li>
+</ul>
+</li>
+<li>Vladimir Kostyukov&rsquo;s <a href=http://arxiv.org/pdf/1312.4666v1.pdf>paper</a>
+<ul>
+<li>A more complete version of their blog post</li>
+<li>Includes efficient algorithm for element removal</li>
+</ul>
+</li>
+<li>Vladimir Kostyukov&rsquo;s <a href=https://github.com/vkostyukov/scalacaster/blob/master/src/heap/StandardHeap.scala>source code</a>
+<ul>
+<li>Scala source code for their own implementation.</li>
+</ul>
+</li>
+</ol>
+<p>Thank you Paul and Vladimir for such great source material.</p>
+<h2 id=heap-sort>Heap Sort<a href=#heap-sort class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>Heap sort uses the properties of Heaps to sort an array.</p>
+<p>It works as follows:</p>
+<ol>
+<li>Place all elements of array into a heap</li>
+<li>Repeatedly remove the root element of the heap and insert it into the array</li>
+</ol>
+<p>The <em>Heap Property</em> ensures that the resulting array is in sorted order.</p>
+<h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>To start the implementation of heap sort, we will need an efficient heap.
+This will be represented by a module with schema in Elixir.</p>
+<h3 id=the-heap-data-structure>The heap data structure<a href=#the-heap-data-structure class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>With the house-keeping out of the way let&rsquo;s introduce the heap data structure.</p>
+<p>There are two properties that a Heap has:</p>
+<ol>
+<li><strong>Shape Property:</strong> Heaps are <em>complete binary trees</em>. Meaning all levels, except possibly the
+last one, are fully filled and all nodes are filled from left to right.</li>
+<li><strong>Heap Property:</strong> The key stored in each node is either greater than or equal to (<em>max-heap</em>) or less than or
+equal to (<em>min-heap</em>) the keys in the node&rsquo;s children</li>
+</ol>
+<p>Some other useful properties are:</p>
+<ol>
+<li>The left child index of a node in an array representation of a heap is given
+by <code>2*i</code> where <code>i</code> is the index of the node in the array.</li>
+<li>The right child index of a node in an array representation of a heap is given
+by <code>2*i + 1</code> where <code>i</code> is the index of the node in the array.</li>
+<li>The maximum number of nodes in a complete binary tree is <code>2^(h) - 1</code> where
+<code>h</code> is the height of the tree. A tree of only a root node has a height of <code>0</code>.</li>
+</ol>
+<h3 id=code>Code<a href=#code class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h3>
+<p>This implementation of a heap will be recursive.
+Meaning each node in the heap will itself be a heap.</p>
+<p>In the heap we will want to track several things:</p>
+<ol>
+<li>The <strong>value</strong> of the heap</li>
+<li>The <strong>size</strong> of the heap, ie: the number of nodes in the heap</li>
+<li>The <strong>height</strong> of the heap, ie: the largest number of edges from a leaf to
+the node.</li>
+<li>The <strong>left child</strong> of the heap</li>
+<li>The <strong>right child</strong> of the heap</li>
+</ol>
+<p>To start this implementation, lets configure a struct that will represent a
+<code>Heap</code>.</p>
+<p>The struct will define the supported fields, with some sensible defaults for
+empty heaps, as well as a <em>typespec</em>.</p>
+<p>In an empty Heap, the value and children will be <code>nil</code> and the <code>height</code> and
+<code>size</code> will be <code>0</code>.</p>
+<p>The typespec for the Heap will type the <code>value</code> as an integer for simplicities'
+sake.</p>
+<p>We will also add a simple function called <code>new</code> that will return a new <code>Heap</code>
 for us.
-While not necessary, it&rsquo;s a nice to have.</p><p>With this in mind we get:</p><div class=highlight><pre class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Heap</span> <span class=k>do</span>
+While not necessary, it&rsquo;s a nice to have.</p>
+<p>With this in mind we get:</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-elixir data-lang=elixir><span class=kd>defmodule</span> <span class=nc>ElixirImpl.DataStructure.Heap</span> <span class=k>do</span>
   <span class=na>@moduledoc</span> <span class=sh>&#34;&#34;&#34;
 </span><span class=sh>  A functional implementation of the heap data structure.
 </span><span class=sh>  &#34;&#34;&#34;</span>
@@ -58,12 +193,44 @@ While not necessary, it&rsquo;s a nice to have.</p><p>With this in mind we get:<
   <span class=na>@spec</span> <span class=n>new</span><span class=p>()</span> <span class=o>::</span> <span class=n>t</span><span class=p>()</span>
   <span class=kd>def</span> <span class=n>new</span><span class=p>,</span> <span class=ss>do</span><span class=p>:</span> <span class=err>%</span><span class=n>__MODULE__</span><span class=p>{}</span>
 <span class=k>end</span>
-</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2><p>There was a lot of theory covered in this post.
+</code></pre></div><h2 id=conclusion>Conclusion<a href=#conclusion class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
+<p>There was a lot of theory covered in this post.
 Covering this theory will be extremely useful when the <code>insert</code> and <code>removal</code>
 procedures are implemented.
 For each of those operations we will leverage the Heap&rsquo;s properties to make sure
 we implement each operation in <code>O(log(n))</code> time while also maintaining the heap
-properties at each step.</p><p>Once that is complete, heapsort will be trivial to implement and we will have
+properties at each step.</p>
+<p>Once that is complete, heapsort will be trivial to implement and we will have
 worst case running time of <code>O(log(n))</code> ensured.
-implement heapsort.</p><p>In the next post, we will implement the <code>O(log(n))</code> insertion of elements. Stay
-tuned until then!</p></div><hr class=post-end><footer class=post-info><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/algorithms>Algorithms</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/sorting>Sorting</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heapsort>Heapsort</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heaps>Heaps</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/functional>Functional</a></span></p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>871 Words</p><p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-06-01 15:00 +0000</p></footer></article><div class="post-nav thin"><a class=prev-post href=https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/><span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Max Subarray in Elixir</span></a></div><div id=comments class=thin></div></main><footer id=site-footer class="section-inner thin animated fadeIn faster"><p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p><p>Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></p></footer><script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script><script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script><script async src=https://www.google-analytics.com/analytics.js></script></body></html>
+implement heapsort.</p>
+<p>In the next post, we will implement the <code>O(log(n))</code> insertion of elements. Stay
+tuned until then!</p>
+</div>
+<hr class=post-end>
+<footer class=post-info>
+<p>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/algorithms>Algorithms</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/sorting>Sorting</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heapsort>Heapsort</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heaps>Heaps</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/functional>Functional</a></span>
+</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>871 Words</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-06-01 15:00 +0000</p>
+</footer>
+</article>
+<div class="post-nav thin">
+<a class=prev-post href=https://www.samuelwillis.dev/posts/heap-sort-part-2/>
+<span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Heap Sort, Part 2</span>
+</a>
+</div>
+<div id=comments class=thin>
+</div>
+</main>
+<footer id=site-footer class="section-inner thin animated fadeIn faster">
+<p>&copy; 2021 <a href=https://www.samuelwillis.dev>Samuel Willis</a></p>
+<p>
+Made with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> &#183; Theme <a href=https://github.com/Track3/hermit target=_blank rel=noopener>Hermit</a> &#183; <a href=https://www.samuelwillis.dev/posts/index.xml target=_blank title=rss><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a>
+</p>
+</footer>
+<script src=https://www.samuelwillis.dev/js/bundle.min.7d8545daa55d62427355498dd8da13f98ff79a7938ce7d2a5e2ae1ec0de3beb8.js integrity="sha256-fYVF2qVdYkJzVUmN2NoT+Y/3mnk4zn0qXirh7A3jvrg=" crossorigin=anonymous></script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','UA-194304466-1','auto'),ga('send','pageview'))</script>
+<script async src=https://www.google-analytics.com/analytics.js></script>
+</body>
+</html>

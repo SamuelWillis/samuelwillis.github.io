@@ -107,7 +107,7 @@ sake.</p>
 for us.
 While not necessary, it&rsquo;s a nice to have.</p>
 <p>With this in mind we get:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Heap</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Heap</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  A functional implementation of the heap data structure.
 </span><span class="sh">  &#34;&#34;&#34;</span>
@@ -144,6 +144,258 @@ worst case running time of <code>O(log(n))</code> ensured.
 implement heapsort.</p>
 <p>In the next post, we will implement the <code>O(log(n))</code> insertion of elements. Stay
 tuned until then!</p>
+]]></content></item><item><title>Heap Sort, Part 2</title><link>https://www.samuelwillis.dev/posts/heap-sort-part-2/</link><pubDate>Tue, 01 Jun 2021 09:00:00 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/heap-sort-part-2/</guid><description>Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
+Insertion will work using two traversals of the heap, the first finding the next available leaf and the second bubbling the new value up the heap to maintain the max heap property.
+Due to Elixir&amp;rsquo;s immutability a new heap will need to be built at each step that updates the heap&amp;rsquo;s height, size, and children.</description><content type="html"><![CDATA[<p>Following from <a href="https://www.samuelwillis.dev/posts/heap-sort-part-1/">Part One</a> in this heapsort
+series, this post will go over <code>O(log(n))</code> insertions into the Heap.</p>
+<p>Insertion will work using two traversals of the heap, the first finding the
+next available leaf and the second bubbling the new value up the heap to
+maintain the max heap property.</p>
+<p>Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that
+updates the heap&rsquo;s height, size, and children.</p>
+<p>Since there is two traversals, I&rsquo;ll split the implementation up into two
+portions.
+The first traversal down to the next available leaf and then the second
+traversal to bubble the new value to its correct spot in the heap.</p>
+<h2 id="finding-the-leaf">Finding the leaf</h2>
+<p>Finding the next available leaf was probably one of the trickier parts of the
+insertion.
+In the end, it hinges on the array definition of a heap and the index of a
+leaf&rsquo;s parent in the array.</p>
+<p>To start, we will do the 3 base clauses:</p>
+<ol>
+<li>Insertion into empty heap =&gt; set the heap&rsquo;s value.</li>
+<li>Insertion into a heap that is a leaf =&gt; add a left child to the parent heap
+that has the value being inserted.</li>
+<li>Insertion into a heap that does not have a right child =&gt; add a right child
+to the parent heap that has the value being inserted.</li>
+</ol>
+<p>These clauses are the simple cases and cover &ldquo;filling&rdquo; a heap.
+To implement them a custom guard will be used to determine if a heap is a leaf
+or not.
+A heap is considered a leaf if it has no children.</p>
+<p>In each clause, a new heap will be created that includes the new value at the
+appropriate place and the new size of the heap.</p>
+<p>Notice only the clauses that add a value to an empty heap or the left child will
+increase the heap&rsquo;s height, however.
+This is because adding a right child to a heap does not increase the heap&rsquo;s
+height.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="n">defguard</span> <span class="n">is_empty</span><span class="p">(</span><span class="n">heap</span><span class="p">)</span> <span class="ow">when</span> <span class="n">heap</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span>
+
+  <span class="n">defguard</span> <span class="n">is_leaf</span><span class="p">(</span><span class="n">heap</span><span class="p">)</span> <span class="ow">when</span> <span class="n">is_nil</span><span class="p">(</span><span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_nil</span><span class="p">(</span><span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Push the new value into the heap.
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">push</span><span class="p">(</span><span class="n">t</span><span class="p">(),</span> <span class="n">integer</span><span class="p">())</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">when</span> <span class="n">is_empty</span><span class="p">(</span><span class="n">heap</span><span class="p">),</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">value</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="ss">height</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">height</span><span class="p">:</span> <span class="n">height</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="ow">when</span> <span class="n">is_leaf</span><span class="p">(</span><span class="n">heap</span><span class="p">),</span>
+    <span class="ss">do</span><span class="p">:</span>
+      <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">height</span><span class="p">:</span> <span class="n">height</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="c1"># Push the value onto an empty heap</span>
+          <span class="ss">left</span><span class="p">:</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{},</span> <span class="n">value</span><span class="p">)</span>
+      <span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span> <span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span> <span class="ss">right</span><span class="p">:</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="ow">when</span> <span class="n">is_nil</span><span class="p">(</span><span class="n">right</span><span class="p">),</span>
+    <span class="ss">do</span><span class="p">:</span>
+      <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="c1"># push the value onto a empty heap</span>
+          <span class="ss">right</span><span class="p">:</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{},</span> <span class="n">value</span><span class="p">)</span>
+      <span class="p">}</span>
+</code></pre></div><p>The remaining two clauses need to determine if the next available spot is in the
+left or right child heaps.</p>
+<p>The trick to this is finding the next available leaf&rsquo;s parent index if it were
+an array implementation.</p>
+<p>Given a the size of the heap with the new value inserted, the node will be in
+the left subtree if the parent index is divisible by 2, due to the array
+index definitions <code>left_child_index(i): 2*i</code> and <code>parent_index(i): floor(i/2)</code>.</p>
+<p>Similarily, the new node will be in the right subtree if the parent index is not
+divisible by 2, again from the array index definitions <code>right(i): 2*i + 1</code> and
+<code>parent(i): floor(i/2)</code>.</p>
+<p>So the last two clauses will build a new heap with the new value inserted into
+the appropriate subtree.
+The new heap will have the updated size, as well as a new height.
+The height is determined to be the max height of the heap&rsquo;s subtrees plus 1.</p>
+<p>Using guards to makes this really expresive:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="n">defguard</span> <span class="n">is_next_leaf_in_left_subtree</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="ow">when</span> <span class="n">size</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">|&gt;</span> <span class="n">rem</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+  <span class="n">defguard</span> <span class="n">is_next_leaf_in_right_subtree</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="ow">when</span> <span class="n">size</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">|&gt;</span> <span class="n">rem</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+  <span class="na">@spec</span> <span class="n">push</span><span class="p">(</span><span class="n">t</span><span class="p">(),</span> <span class="n">integer</span><span class="p">())</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span> <span class="ss">right</span><span class="p">:</span> <span class="n">right</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">is_next_leaf_in_left_subtree</span><span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">new_left</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+      <span class="n">heap</span>
+      <span class="o">|</span> <span class="ss">height</span><span class="p">:</span> <span class="n">max</span><span class="p">(</span><span class="n">new_left</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">right</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">left</span><span class="p">:</span> <span class="n">new_left</span><span class="p">,</span>
+        <span class="ss">right</span><span class="p">:</span> <span class="n">right</span>
+    <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span> <span class="ss">right</span><span class="p">:</span> <span class="n">right</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">is_next_leaf_in_right_subtree</span><span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">new_right</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+      <span class="n">heap</span>
+      <span class="o">|</span> <span class="ss">height</span><span class="p">:</span> <span class="n">max</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">new_right</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span>
+        <span class="ss">right</span><span class="p">:</span> <span class="n">new_right</span>
+    <span class="p">}</span>
+  <span class="k">end</span>
+</code></pre></div><p>Now that we&rsquo;ve handled pushing a new value onto the heap at the correct place,
+we need to ensure that the max-heap property is maintained.</p>
+<p>To do this we need to bubble up the inserted value to the correct position in
+the heap it was inserted into.</p>
+<h2 id="bubble-up-routine">Bubble up routine</h2>
+<p>To bubble the new value up to its proper position in the heap a bubble up
+routine will be needed.</p>
+<p>The routine will accept a Heap struct and check the root value against the
+children values, swapping them if needed to maintain the mx heap property.</p>
+<p>There are 3 cases:</p>
+<ol>
+<li>The right value is larger than the left value  and root value</li>
+<li>The left value is larger than the right value and root value</li>
+<li>The root is the largest value</li>
+</ol>
+<p>In case 1, the root value is swapped with the right value, in case 2 the root
+value is swapped with the left value, and in case 3 nothing is swapped and the
+original heap is returned.</p>
+<p>Implementing this can be written very clearly using function clauses, pattern
+matching, and guards in Elixir.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@spec</span> <span class="n">bubble_up</span><span class="p">(</span><span class="n">heap</span> <span class="o">::</span> <span class="n">t</span><span class="p">())</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">bubble_up</span><span class="p">(</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{},</span> <span class="ss">right</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{}}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span>
+             <span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+      <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+          <span class="ss">right</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{</span><span class="n">heap</span><span class="o">.</span><span class="n">right</span> <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+      <span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">bubble_up</span><span class="p">(</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{}}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+      <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+          <span class="ss">left</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{</span><span class="n">heap</span><span class="o">.</span><span class="n">left</span> <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+      <span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">bubble_up</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">heap</span>
+</code></pre></div><p>Now the routine needs to be used by the <code>push</code> function.</p>
+<h3 id="putting-it-all-together">Putting it all together</h3>
+<p>Putting all the above together the resulting code is quite lengthy but still
+expressive in its intent.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Heap</span> <span class="k">do</span>
+  <span class="n">defguard</span> <span class="n">is_empty</span><span class="p">(</span><span class="n">heap</span><span class="p">)</span> <span class="ow">when</span> <span class="n">heap</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span>
+
+  <span class="n">defguard</span> <span class="n">is_leaf</span><span class="p">(</span><span class="n">heap</span><span class="p">)</span> <span class="ow">when</span> <span class="n">is_nil</span><span class="p">(</span><span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_nil</span><span class="p">(</span><span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+
+  <span class="n">defguard</span> <span class="n">is_next_leaf_in_left_subtree</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="ow">when</span> <span class="n">size</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">|&gt;</span> <span class="n">rem</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+  <span class="n">defguard</span> <span class="n">is_next_leaf_in_right_subtree</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="ow">when</span> <span class="n">size</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">|&gt;</span> <span class="n">rem</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Push the new value into the heap.
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">push</span><span class="p">(</span><span class="n">t</span><span class="p">(),</span> <span class="n">integer</span><span class="p">())</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">when</span> <span class="n">is_empty</span><span class="p">(</span><span class="n">heap</span><span class="p">),</span>
+    <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">value</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span> <span class="ss">height</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">height</span><span class="p">:</span> <span class="n">height</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="ow">when</span> <span class="n">is_leaf</span><span class="p">(</span><span class="n">heap</span><span class="p">),</span>
+    <span class="ss">do</span><span class="p">:</span>
+      <span class="n">bubble_up</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">height</span><span class="p">:</span> <span class="n">height</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="ss">left</span><span class="p">:</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{},</span> <span class="n">value</span><span class="p">)</span>
+      <span class="p">})</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span> <span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span> <span class="ss">right</span><span class="p">:</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="ow">when</span> <span class="n">is_nil</span><span class="p">(</span><span class="n">right</span><span class="p">),</span>
+    <span class="ss">do</span><span class="p">:</span>
+      <span class="n">bubble_up</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="ss">right</span><span class="p">:</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{},</span> <span class="n">value</span><span class="p">)</span>
+      <span class="p">})</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span> <span class="ss">right</span><span class="p">:</span> <span class="n">right</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">is_next_leaf_in_left_subtree</span><span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">new_left</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">bubble_up</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+      <span class="n">heap</span>
+      <span class="o">|</span> <span class="ss">height</span><span class="p">:</span> <span class="n">max</span><span class="p">(</span><span class="n">new_left</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">right</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">left</span><span class="p">:</span> <span class="n">new_left</span><span class="p">,</span>
+        <span class="ss">right</span><span class="p">:</span> <span class="n">right</span>
+    <span class="p">})</span>
+  <span class="k">end</span>
+
+  <span class="kd">def</span> <span class="n">push</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span> <span class="ss">right</span><span class="p">:</span> <span class="n">right</span><span class="p">,</span> <span class="ss">size</span><span class="p">:</span> <span class="n">size</span><span class="p">}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">is_next_leaf_in_right_subtree</span><span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">new_right</span> <span class="o">=</span> <span class="n">push</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">bubble_up</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+      <span class="n">heap</span>
+      <span class="o">|</span> <span class="ss">height</span><span class="p">:</span> <span class="n">max</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">new_right</span><span class="o">.</span><span class="n">height</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">size</span><span class="p">:</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="ss">left</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span>
+        <span class="ss">right</span><span class="p">:</span> <span class="n">new_right</span>
+    <span class="p">})</span>
+  <span class="k">end</span>
+
+  <span class="na">@spec</span> <span class="n">bubble_up</span><span class="p">(</span><span class="n">heap</span> <span class="o">::</span> <span class="n">t</span><span class="p">())</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">bubble_up</span><span class="p">(</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{},</span> <span class="ss">right</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{}}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span>
+             <span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+      <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+          <span class="ss">right</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{</span><span class="n">heap</span><span class="o">.</span><span class="n">right</span> <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+      <span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">bubble_up</span><span class="p">(</span><span class="n">__MODULE__</span><span class="p">{</span><span class="ss">left</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{}}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">)</span>
+      <span class="ow">when</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+      <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+        <span class="n">heap</span>
+        <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+          <span class="ss">left</span><span class="p">:</span> <span class="n">__MODULE__</span><span class="p">{</span><span class="n">heap</span><span class="o">.</span><span class="n">left</span> <span class="o">|</span> <span class="ss">value</span><span class="p">:</span> <span class="n">heap</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+      <span class="p">}</span>
+
+  <span class="kd">def</span> <span class="n">bubble_up</span><span class="p">(</span><span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span> <span class="o">=</span> <span class="n">heap</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">heap</span>
+<span class="k">end</span>
+</code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>Although complicated, Elixir really helped with writing clear and intention
+revealing code through guards and pattern matching.</p>
+<p>I can&rsquo;t help but attribute this to the lack of <code>if</code> statements needed inside of
+functions, but that&rsquo;s a discussion for another day.</p>
+<p>A downside to this code is, although it&rsquo;s intention revealing, it&rsquo;s likely less
+perfomant than an iterative implementation.
+There&rsquo;s a lot of memory use behind the creation of new heaps each time we need
+to update a value.</p>
+<p>Elixir&rsquo;s immutability is a hinderance here but it is maybe offset somewhat by
+garbage collection being able to dispose of the intermediary heaps as soon as
+they&rsquo;re no longer in use.
+I do not fully understand garbage collection in Elixir yet, but I believe this
+is the case.</p>
+<p>If you&rsquo;re interested in the full implementation of a Heap, <a href="https://github.com/SamuelWillis/algorithms/blob/main/elixir/lib/data_structures/heap.ex">see it
+here</a>.</p>
+<p>If you have comments, improvements, or corrections please feel free to leave an
+<a href="https://github.com/SamuelWillis/algorithms/issues">issue in Github</a>.</p>
 ]]></content></item><item><title>Max Subarray in Elixir</title><link>https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/</link><pubDate>Thu, 20 May 2021 21:00:50 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/</guid><description>The maximum subarray problem is defined as follows:
 Given an array A find a nonempty, contiguous subarray of A whose values have the largest sum.
 It&amp;rsquo;s an interesting little problem that benefits greatly from the use of a divide and conquer algorithm as the runtime goes from O(n^2) for the brute force method to O(nlog(n)) for the divide and conquer method.
@@ -184,7 +436,7 @@ Returning the subarray can also be done with some adjustments to the code, for s
 <li>For an empty list, the maximum contiguous sum will be <code>0</code>.</li>
 <li>For a single element list, the max will be the value of the single element.</li>
 </ul>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DivideAndConquer.MaxContiguousSum</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DivideAndConquer.MaxContiguousSum</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Find the maximum contiguous sum in a provided list
 </span><span class="sh">  &#34;&#34;&#34;</span>
@@ -207,7 +459,7 @@ In practice, I&rsquo;d recommend using <a href="https://hexdocs.pm/elixir/Enum.h
 <p>To perform the split, the middle index is calculated, then the original list is split into two recursively with elements <code>0..middle</code> in the first array and the remaining elements in the second.</p>
 <p>To avoid appending to a list, the left list is built by prepending and then reversed.
 Again, a home brewed reverse is used as a learning tool but I&rsquo;d suggest using <a href="https://hexdocs.pm/elixir/Enum.html#reverse/1">Enum.reverse/1</a> in practice.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Split a list into two parts leaving count elements in the first part.
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
@@ -251,7 +503,7 @@ Again, a home brewed reverse is used as a learning tool but I&rsquo;d suggest us
   <span class="kd">def</span> <span class="n">do_reverse</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_reverse</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">list</span><span class="p">],</span> <span class="n">tail</span><span class="p">)</span>
   <span class="kd">def</span> <span class="n">do_reverse</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">list</span>
 </code></pre></div><p>Adding the middle index calculation, the split, and the recursive calls to <code>find</code> it now looks like:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
     <span class="n">middle</span> <span class="o">=</span> <span class="n">list</span> <span class="o">|&gt;</span> <span class="n">length</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="p">{</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">middle</span><span class="p">)</span>
@@ -265,7 +517,7 @@ In order to do this, the maximum sum in the array <code>A[lo..mid]</code> is fou
 This function will take a list and add elements together until the sum is no longer smaller than the sum plus the next element.</p>
 <p>Using pattern matching and guards this is quite simple.
 Care must be taken when finding the sum of the <code>left</code> array as the maximum sum must include the middle element, so it is reversed before being passed to the <code>find_sum/2</code> helper.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">find_cross_sum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">find_cross_sum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span> <span class="k">do</span>
     <span class="n">left_sum</span> <span class="o">=</span> <span class="n">left</span> <span class="o">|&gt;</span> <span class="nc">ListHelpers</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">find_sum</span><span class="p">()</span>
     <span class="n">right_sum</span> <span class="o">=</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">right</span><span class="p">)</span>
 
@@ -277,7 +529,7 @@ Care must be taken when finding the sum of the <code>left</code> array as the ma
   <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">([</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">],</span> <span class="n">sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">sum</span> <span class="o">&lt;=</span> <span class="n">sum</span> <span class="o">+</span> <span class="n">head</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">sum</span> <span class="o">+</span> <span class="n">head</span><span class="p">)</span>
   <span class="kd">defp</span> <span class="n">find_sum</span><span class="p">(</span><span class="n">_list</span><span class="p">,</span> <span class="n">sum</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">sum</span>
 </code></pre></div><p>The find function needs to be updated to find the cross sum, making it look as so:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">def</span> <span class="n">find</span><span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="k">do</span>
     <span class="n">middle</span> <span class="o">=</span> <span class="n">list</span> <span class="o">|&gt;</span> <span class="n">length</span><span class="p">()</span> <span class="o">|&gt;</span> <span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="p">{</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">}</span> <span class="o">=</span> <span class="nc">ListHelpers</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">list</span><span class="p">,</span> <span class="n">middle</span><span class="p">)</span>
@@ -288,7 +540,7 @@ Care must be taken when finding the sum of the <code>left</code> array as the ma
   <span class="k">end</span>
 </code></pre></div><p>The final piece is returning the maximum of <code>left_sum</code>, <code>right_sum</code>, and <code>cross_sum</code>.
 This can be done with a <code>cond</code> statement but I thought a <code>max/3</code> that leverages guards was nicer to read and easier to follow.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">left_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span><span class="p">,</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">left_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">right_sum</span><span class="p">,</span>
     <span class="ss">do</span><span class="p">:</span> <span class="n">right_sum</span>
 
   <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">left_sum</span><span class="p">,</span> <span class="n">right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">)</span> <span class="ow">when</span> <span class="n">right_sum</span> <span class="o">&lt;=</span> <span class="n">left_sum</span> <span class="ow">and</span> <span class="n">cross_sum</span> <span class="o">&lt;=</span> <span class="n">left_sum</span><span class="p">,</span>
@@ -296,7 +548,7 @@ This can be done with a <code>cond</code> statement but I thought a <code>max/3<
 
   <span class="kd">defp</span> <span class="n">max</span><span class="p">(</span><span class="n">_left_sum</span><span class="p">,</span> <span class="n">_right_sum</span><span class="p">,</span> <span class="n">cross_sum</span><span class="p">),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">cross_sum</span>
 </code></pre></div><p>Putting this all together the final implementation is</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DivideAndConquer.MaxContiguousSum</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DivideAndConquer.MaxContiguousSum</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Find the maximum contiguous sum in a provided list
 </span><span class="sh">  &#34;&#34;&#34;</span>
@@ -405,7 +657,7 @@ first start learning Elixir.</p>
 <p>Instead of loops, Elixir provides pattern matching and recursion.</p>
 <p>Placing the insertion sort implementation into a module, the setup will be as
 follows:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.Sorting.InsertionSort</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.Sorting.InsertionSort</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Simple insertion sort implementation
 </span><span class="sh">  &#34;&#34;&#34;</span>
@@ -440,19 +692,19 @@ placing it into the correct position amongst the sorted elements.</p>
 <p><code>do_sort/2</code> accepts the sorted elements as its first parameter and the remaining
 unsorted elements as its second parameter.</p>
 <p>It will consist of 2 clauses.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="n">_unsorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">insert</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">sorted</span><span class="p">),</span> <span class="n">tail</span><span class="p">)</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="n">_unsorted</span> <span class="o">=</span> <span class="p">[</span><span class="n">head</span> <span class="o">|</span> <span class="n">tail</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">insert</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">sorted</span><span class="p">),</span> <span class="n">tail</span><span class="p">)</span>
   <span class="kd">defp</span> <span class="n">do_sort</span><span class="p">(</span><span class="n">sorted</span><span class="p">,</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="n">sorted</span>
 </code></pre></div><p>The second private function is <code>insert/2</code>.
 It takes care of looping through the sorted list and placing an element in the
 correct position.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="c1"># if no elements to compare against in sorted list, return element as a list</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="c1"># if no elements to compare against in sorted list, return element as a list</span>
   <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">_sorted</span> <span class="o">=</span> <span class="p">[]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">element</span><span class="p">]</span>
   <span class="c1"># if element is less than the first element of the sorted list, insert at front</span>
   <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">_rest</span><span class="p">]</span> <span class="o">=</span> <span class="n">sorted</span><span class="p">)</span> <span class="ow">when</span> <span class="n">element</span> <span class="o">&lt;=</span> <span class="n">min</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">element</span> <span class="o">|</span> <span class="n">sorted</span><span class="p">]</span>
   <span class="c1"># Otherwise element is larger than min and we check it against the next sorted element</span>
   <span class="kd">defp</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">rest</span><span class="p">]),</span> <span class="ss">do</span><span class="p">:</span> <span class="p">[</span><span class="n">min</span> <span class="o">|</span> <span class="n">insert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">rest</span><span class="p">)]</span>
 </code></pre></div><p>Putting it all together the implementation is:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.Sorting.InsertionSort</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.Sorting.InsertionSort</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Simple insertion sort implementation
 </span><span class="sh">  &#34;&#34;&#34;</span>
@@ -570,7 +822,7 @@ from Erlang.</p>
 <h3 id="set-up">Set up</h3>
 <p>As in the <a href="https://www.samuelwillis.dev/posts/stacks-in-elixir/#implementation">Stack implementation</a> a struct will be used to represent
 the Queue.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Queue</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Queue</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Queue implementation.
 </span><span class="sh">  &#34;&#34;&#34;</span>
@@ -583,7 +835,7 @@ the Queue.</p>
 </code></pre></div><h3 id="enqueue">Enqueue</h3>
 <p>Because this implementation places the new items at the front of the list of
 elements the enqueue implementation is quite simple.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Add an item into a queue.
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
@@ -611,7 +863,7 @@ atom, the item, and the queue with the list of elements omitting the dequeued
 item.</p>
 <p>If the list of elements is empty a <code>{:error, &quot;Empty Queue&quot;}</code> tuple is returned.</p>
 <p>Putting it together it looks as follows:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Remove an item from the queue.
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
@@ -644,7 +896,7 @@ Otherwise, return <code>true</code>.
 The <a href="https://hexdocs.pm/elixir/master/naming-conventions.html#trailing-question-mark-foo">trailing question
 mark</a>
 naming convention is used in the implementation.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Check the if queue is empty
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
@@ -715,7 +967,7 @@ This does come at the cost of more space used to store each item.</p>
 represent a Stack.
 A field called <code>elements</code> will be used to store the list of elements.
 Each item in the elements list can have any type.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Stack</span> <span class="k">do</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Stack</span> <span class="k">do</span>
   <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Stack implementation.
 </span><span class="sh">
@@ -733,7 +985,7 @@ Each item in the elements list can have any type.</p>
 <p>Since the elements struct key will always exist the <code>|</code> operator to can be
 used to update the elements key in the struct without worrying about an error.</p>
 <p>Thus the <code>push</code> operation looks like so:</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Push an item onto a stack.
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
@@ -760,7 +1012,7 @@ reason.</p>
 In this case, the <code>head</code> and <code>tail</code> of the elements list is matched against.
 The Stack then has its elements updated to be the matched <code>tail</code> and a tuple is
 returned consisting of a <code>:ok</code> atom, the matched <code>head</code>, and the updated Stack.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Pop an item off the top of the stack
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
@@ -783,7 +1035,7 @@ Otherwise, return <code>true</code>.
 The <a href="https://hexdocs.pm/elixir/master/naming-conventions.html#trailing-question-mark-foo">trailing question
 mark</a>
 naming convention is used in the implementation.</p>
-<div class="highlight"><pre class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir">  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
 </span><span class="sh">  Check if stack is empty
 </span><span class="sh">
 </span><span class="sh">  </span><span class="err">##</span><span class="sh"> Examples
