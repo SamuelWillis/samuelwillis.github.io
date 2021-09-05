@@ -6,8 +6,8 @@
 <meta itemprop=name content="Heap Sort, Part 2">
 <meta itemprop=description content="Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
 Insertion will work using two traversals of the heap, the first finding the next available leaf and the second bubbling the new value up the heap to maintain the max heap property.
-Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that updates the heap&rsquo;s height, size, and children."><meta itemprop=datePublished content="2021-06-01T09:00:00-06:00">
-<meta itemprop=dateModified content="2021-06-01T09:00:00-06:00">
+Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that updates the heap&rsquo;s height, size, and children."><meta itemprop=datePublished content="2021-07-01T09:00:00-06:00">
+<meta itemprop=dateModified content="2021-07-01T09:00:00-06:00">
 <meta itemprop=wordCount content="1373">
 <meta itemprop=keywords content="Elixir,Algorithms,DataStructures,Implementation,Code,Sorting,Heapsort,Heaps,Functional,"><meta property="og:title" content="Heap Sort, Part 2">
 <meta property="og:description" content="Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
@@ -15,8 +15,8 @@ Insertion will work using two traversals of the heap, the first finding the next
 Due to Elixir&rsquo;s immutability a new heap will need to be built at each step that updates the heap&rsquo;s height, size, and children.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://www.samuelwillis.dev/posts/heap-sort-part-2/"><meta property="article:section" content="posts">
-<meta property="article:published_time" content="2021-06-01T09:00:00-06:00">
-<meta property="article:modified_time" content="2021-06-01T09:00:00-06:00">
+<meta property="article:published_time" content="2021-07-01T09:00:00-06:00">
+<meta property="article:modified_time" content="2021-07-01T09:00:00-06:00">
 <meta name=twitter:card content="summary">
 <meta name=twitter:title content="Heap Sort, Part 2">
 <meta name=twitter:description content="Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
@@ -57,7 +57,7 @@ Due to Elixir&rsquo;s immutability a new heap will need to be built at each step
 <main class="site-main section-inner animated fadeIn faster">
 <article class=thin>
 <header class=post-header>
-<div class=post-meta><span>Jun 1, 2021</span></div>
+<div class=post-meta><span>Jul 1, 2021</span></div>
 <h1>Heap Sort, Part 2</h1>
 </header>
 <div class=content>
@@ -318,15 +318,12 @@ here</a>.</p>
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg><span class=tag><a href=https://www.samuelwillis.dev/tags/elixir>Elixir</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/algorithms>Algorithms</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/datastructures>DataStructures</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/implementation>Implementation</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/code>Code</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/sorting>Sorting</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heapsort>Heapsort</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/heaps>Heaps</a></span><span class=tag><a href=https://www.samuelwillis.dev/tags/functional>Functional</a></span>
 </p>
 <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6A2 2 0 004 4v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>1373 Words</p>
-<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-06-01 15:00 +0000</p>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>2021-07-01 15:00 +0000</p>
 </footer>
 </article>
 <div class="post-nav thin">
-<a class=next-post href=https://www.samuelwillis.dev/posts/heap-sort-part-1/>
-<span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Heap Sort, Part 1</span>
-</a>
-<a class=prev-post href=https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/>
-<span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Max Subarray in Elixir</span>
+<a class=prev-post href=https://www.samuelwillis.dev/posts/heap-sort-part-1/>
+<span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Heap Sort, Part 1</span>
 </a>
 </div>
 <div id=comments class=thin>

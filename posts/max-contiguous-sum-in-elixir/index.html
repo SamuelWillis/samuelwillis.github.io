@@ -89,7 +89,7 @@ With this split any contiguous subarray must land in one of three places:</p>
 It is not in-depth at all and I would recommend looking elsewhere for more complete analysis.
 This is based off the <a href=https://en.wikipedia.org/wiki/Introduction_to_Algorithms>CLRS Algorithms book</a> analysis and is a very condensed summary.</p>
 <p>Since the array is split in half for each recursive call and the base cases are <code>O(1)</code>, the recursion equation is</p>
-<pre><code>T(n) = O(1) if n=1
+<pre tabindex=0><code>T(n) = O(1) if n=1
      = 2T(n/2) + O(n) if n &gt; 1
 </code></pre><p>Meaning that the <a href=https://www.programiz.com/dsa/master-theorem>Master Theorem</a> can be applied to solve the equation and the runtime is <code>O(nlog(n))</code>.</p>
 <h2 id=implementation>Implementation<a href=#implementation class=anchor aria-hidden=true><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h3a5 5 0 015 5 5 5 0 01-5 5h-3m-6 0H6a5 5 0 01-5-5 5 5 0 015-5h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg></a></h2>
@@ -302,8 +302,8 @@ notes</a>.</p>
 </footer>
 </article>
 <div class="post-nav thin">
-<a class=next-post href=https://www.samuelwillis.dev/posts/heap-sort-part-2/>
-<span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Heap Sort, Part 2</span>
+<a class=next-post href=https://www.samuelwillis.dev/posts/heap-sort-part-1/>
+<span class=post-nav-label><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>&nbsp;Newer</span><br><span>Heap Sort, Part 1</span>
 </a>
 <a class=prev-post href=https://www.samuelwillis.dev/posts/insertion-sort-in-elixir/>
 <span class=post-nav-label>Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><br><span>Insertion Sort in Elixir</span>

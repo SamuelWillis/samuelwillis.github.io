@@ -1,150 +1,4 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 01 Jun 2021 09:00:00 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Heap Sort, Part 1</title><link>https://www.samuelwillis.dev/posts/heap-sort-part-1/</link><pubDate>Tue, 01 Jun 2021 09:00:00 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/heap-sort-part-1/</guid><description>This is the first of a multi-part series on Heapsort.
-While the Heapsort algorithm itself is a fairly simple algorithm, it poses some complexity when implemented in an immutable language that does not support index based arrays, such as Elixir.
-This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however.</description><content type="html"><![CDATA[<p>This is the first of a multi-part series on Heapsort.</p>
-<p>While the Heapsort algorithm itself is a fairly simple algorithm, it poses some
-complexity when implemented in an immutable language that does not support index
-based arrays, such as Elixir.</p>
-<p>This is because of the Heap data structure that Heapsort relies on.
-In imperative languages a Heap is trivially implemented through the use of an
-array and calculated indexes. Elixir does not provide us with this luxury,
-however.</p>
-<p>In this series of posts I will showcase an implementation of Heaps using
-pointers that maintains the <code>O(log(n))</code> insertion and removal of elements.
-It will then be used to implement Heapsort.</p>
-<p>The series will be broken up into 4 parts:</p>
-<ol>
-<li>Introduction to Heap Data Structure (this post)</li>
-<li><code>O(log(n))</code> insertions with Heap</li>
-<li><code>O(log(n))</code> removals with Heap</li>
-<li>Heapsort implementation using the Heap</li>
-</ol>
-<h2 id="citations">Citations</h2>
-<p>Before we proceed, I would like to give cite some resources that I used to write
-this code.</p>
-<p>Without these resources, I would probably still be scratching my head in
-confusion and I found them to be indispensable while working this Heapsort
-implementation.
-Especially for the insertion and removal procedures in <code>O(log(n))</code> time.</p>
-<p>Each resource is also cited in the final implementation&rsquo;s source code.</p>
-<ol>
-<li><a href="https://www.cpp.edu/~ftang/courses/CS241/notes/Building_Heaps_With_Pointers.pdf">Paul Picazo&rsquo;s paper on
-Peaps</a>
-<ul>
-<li>Provided a much simplified algorithm to find the next place to insert a new
-element</li>
-</ul>
-</li>
-<li>Vladimir Kostyukov&rsquo;s <a href="https://kostyukov.net/posts/designing-a-pfds/">Scala Heap Blog Post</a>
-<ul>
-<li>A great write up on transforming imperative/RAM based algorithms into
-functional ones.</li>
-<li>Focussed on implementing a Heap in Scala</li>
-</ul>
-</li>
-<li>Vladimir Kostyukov&rsquo;s <a href="http://arxiv.org/pdf/1312.4666v1.pdf">paper</a>
-<ul>
-<li>A more complete version of their blog post</li>
-<li>Includes efficient algorithm for element removal</li>
-</ul>
-</li>
-<li>Vladimir Kostyukov&rsquo;s <a href="https://github.com/vkostyukov/scalacaster/blob/master/src/heap/StandardHeap.scala">source code</a>
-<ul>
-<li>Scala source code for their own implementation.</li>
-</ul>
-</li>
-</ol>
-<p>Thank you Paul and Vladimir for such great source material.</p>
-<h2 id="heap-sort">Heap Sort</h2>
-<p>Heap sort uses the properties of Heaps to sort an array.</p>
-<p>It works as follows:</p>
-<ol>
-<li>Place all elements of array into a heap</li>
-<li>Repeatedly remove the root element of the heap and insert it into the array</li>
-</ol>
-<p>The <em>Heap Property</em> ensures that the resulting array is in sorted order.</p>
-<h2 id="implementation">Implementation</h2>
-<p>To start the implementation of heap sort, we will need an efficient heap.
-This will be represented by a module with schema in Elixir.</p>
-<h3 id="the-heap-data-structure">The heap data structure</h3>
-<p>With the house-keeping out of the way let&rsquo;s introduce the heap data structure.</p>
-<p>There are two properties that a Heap has:</p>
-<ol>
-<li><strong>Shape Property:</strong> Heaps are <em>complete binary trees</em>. Meaning all levels, except possibly the
-last one, are fully filled and all nodes are filled from left to right.</li>
-<li><strong>Heap Property:</strong> The key stored in each node is either greater than or equal to (<em>max-heap</em>) or less than or
-equal to (<em>min-heap</em>) the keys in the node&rsquo;s children</li>
-</ol>
-<p>Some other useful properties are:</p>
-<ol>
-<li>The left child index of a node in an array representation of a heap is given
-by <code>2*i</code> where <code>i</code> is the index of the node in the array.</li>
-<li>The right child index of a node in an array representation of a heap is given
-by <code>2*i + 1</code> where <code>i</code> is the index of the node in the array.</li>
-<li>The maximum number of nodes in a complete binary tree is <code>2^(h) - 1</code> where
-<code>h</code> is the height of the tree. A tree of only a root node has a height of <code>0</code>.</li>
-</ol>
-<h3 id="code">Code</h3>
-<p>This implementation of a heap will be recursive.
-Meaning each node in the heap will itself be a heap.</p>
-<p>In the heap we will want to track several things:</p>
-<ol>
-<li>The <strong>value</strong> of the heap</li>
-<li>The <strong>size</strong> of the heap, ie: the number of nodes in the heap</li>
-<li>The <strong>height</strong> of the heap, ie: the largest number of edges from a leaf to
-the node.</li>
-<li>The <strong>left child</strong> of the heap</li>
-<li>The <strong>right child</strong> of the heap</li>
-</ol>
-<p>To start this implementation, lets configure a struct that will represent a
-<code>Heap</code>.</p>
-<p>The struct will define the supported fields, with some sensible defaults for
-empty heaps, as well as a <em>typespec</em>.</p>
-<p>In an empty Heap, the value and children will be <code>nil</code> and the <code>height</code> and
-<code>size</code> will be <code>0</code>.</p>
-<p>The typespec for the Heap will type the <code>value</code> as an integer for simplicities'
-sake.</p>
-<p>We will also add a simple function called <code>new</code> that will return a new <code>Heap</code>
-for us.
-While not necessary, it&rsquo;s a nice to have.</p>
-<p>With this in mind we get:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Heap</span> <span class="k">do</span>
-  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
-</span><span class="sh">  A functional implementation of the heap data structure.
-</span><span class="sh">  &#34;&#34;&#34;</span>
-
-  <span class="kd">defstruct</span>
-  <span class="ss">value</span><span class="p">:</span> <span class="no">nil</span><span class="p">,</span>
-  <span class="ss">left</span><span class="p">:</span> <span class="no">nil</span><span class="p">,</span>
-  <span class="ss">size</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-  <span class="ss">height</span><span class="p">:</span> <span class="mi">0</span>
-
-  <span class="na">@type</span> <span class="n">t</span> <span class="o">::</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
-          <span class="ss">value</span><span class="p">:</span> <span class="n">integer</span><span class="p">()</span> <span class="o">|</span> <span class="no">nil</span>
-          <span class="ss">left</span><span class="p">:</span> <span class="n">t</span><span class="p">()</span> <span class="o">|</span> <span class="no">nil</span><span class="p">,</span>
-          <span class="ss">right</span><span class="p">:</span> <span class="n">t</span><span class="p">()</span> <span class="o">|</span> <span class="no">nil</span><span class="p">,</span>
-          <span class="ss">size</span><span class="p">:</span> <span class="n">integer</span><span class="p">(),</span>
-          <span class="ss">height</span><span class="p">:</span> <span class="n">integer</span><span class="p">(),</span>
-  <span class="p">}</span>
-
-  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
-</span><span class="sh">  Builds a new Heap
-</span><span class="sh">  &#34;&#34;&#34;</span>
-  <span class="na">@spec</span> <span class="n">new</span><span class="p">()</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
-  <span class="kd">def</span> <span class="n">new</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span>
-<span class="k">end</span>
-</code></pre></div><h2 id="conclusion">Conclusion</h2>
-<p>There was a lot of theory covered in this post.
-Covering this theory will be extremely useful when the <code>insert</code> and <code>removal</code>
-procedures are implemented.
-For each of those operations we will leverage the Heap&rsquo;s properties to make sure
-we implement each operation in <code>O(log(n))</code> time while also maintaining the heap
-properties at each step.</p>
-<p>Once that is complete, heapsort will be trivial to implement and we will have
-worst case running time of <code>O(log(n))</code> ensured.
-implement heapsort.</p>
-<p>In the next post, we will implement the <code>O(log(n))</code> insertion of elements. Stay
-tuned until then!</p>
-]]></content></item><item><title>Heap Sort, Part 2</title><link>https://www.samuelwillis.dev/posts/heap-sort-part-2/</link><pubDate>Tue, 01 Jun 2021 09:00:00 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/heap-sort-part-2/</guid><description>Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on samuel willis</title><link>https://www.samuelwillis.dev/posts/</link><description>Recent content in Posts on samuel willis</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 01 Jul 2021 09:00:00 -0600</lastBuildDate><atom:link href="https://www.samuelwillis.dev/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Heap Sort, Part 2</title><link>https://www.samuelwillis.dev/posts/heap-sort-part-2/</link><pubDate>Thu, 01 Jul 2021 09:00:00 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/heap-sort-part-2/</guid><description>Following from Part One in this heapsort series, this post will go over O(log(n)) insertions into the Heap.
 Insertion will work using two traversals of the heap, the first finding the next available leaf and the second bubbling the new value up the heap to maintain the max heap property.
 Due to Elixir&amp;rsquo;s immutability a new heap will need to be built at each step that updates the heap&amp;rsquo;s height, size, and children.</description><content type="html"><![CDATA[<p>Following from <a href="https://www.samuelwillis.dev/posts/heap-sort-part-1/">Part One</a> in this heapsort
 series, this post will go over <code>O(log(n))</code> insertions into the Heap.</p>
@@ -396,6 +250,152 @@ is the case.</p>
 here</a>.</p>
 <p>If you have comments, improvements, or corrections please feel free to leave an
 <a href="https://github.com/SamuelWillis/algorithms/issues">issue in Github</a>.</p>
+]]></content></item><item><title>Heap Sort, Part 1</title><link>https://www.samuelwillis.dev/posts/heap-sort-part-1/</link><pubDate>Tue, 01 Jun 2021 09:00:00 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/heap-sort-part-1/</guid><description>This is the first of a multi-part series on Heapsort.
+While the Heapsort algorithm itself is a fairly simple algorithm, it poses some complexity when implemented in an immutable language that does not support index based arrays, such as Elixir.
+This is because of the Heap data structure that Heapsort relies on. In imperative languages a Heap is trivially implemented through the use of an array and calculated indexes. Elixir does not provide us with this luxury, however.</description><content type="html"><![CDATA[<p>This is the first of a multi-part series on Heapsort.</p>
+<p>While the Heapsort algorithm itself is a fairly simple algorithm, it poses some
+complexity when implemented in an immutable language that does not support index
+based arrays, such as Elixir.</p>
+<p>This is because of the Heap data structure that Heapsort relies on.
+In imperative languages a Heap is trivially implemented through the use of an
+array and calculated indexes. Elixir does not provide us with this luxury,
+however.</p>
+<p>In this series of posts I will showcase an implementation of Heaps using
+pointers that maintains the <code>O(log(n))</code> insertion and removal of elements.
+It will then be used to implement Heapsort.</p>
+<p>The series will be broken up into 4 parts:</p>
+<ol>
+<li>Introduction to Heap Data Structure (this post)</li>
+<li><code>O(log(n))</code> insertions with Heap</li>
+<li><code>O(log(n))</code> removals with Heap</li>
+<li>Heapsort implementation using the Heap</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<p>Before we proceed, I would like to give cite some resources that I used to write
+this code.</p>
+<p>Without these resources, I would probably still be scratching my head in
+confusion and I found them to be indispensable while working this Heapsort
+implementation.
+Especially for the insertion and removal procedures in <code>O(log(n))</code> time.</p>
+<p>Each resource is also cited in the final implementation&rsquo;s source code.</p>
+<ol>
+<li><a href="https://www.cpp.edu/~ftang/courses/CS241/notes/Building_Heaps_With_Pointers.pdf">Paul Picazo&rsquo;s paper on
+Peaps</a>
+<ul>
+<li>Provided a much simplified algorithm to find the next place to insert a new
+element</li>
+</ul>
+</li>
+<li>Vladimir Kostyukov&rsquo;s <a href="https://kostyukov.net/posts/designing-a-pfds/">Scala Heap Blog Post</a>
+<ul>
+<li>A great write up on transforming imperative/RAM based algorithms into
+functional ones.</li>
+<li>Focussed on implementing a Heap in Scala</li>
+</ul>
+</li>
+<li>Vladimir Kostyukov&rsquo;s <a href="http://arxiv.org/pdf/1312.4666v1.pdf">paper</a>
+<ul>
+<li>A more complete version of their blog post</li>
+<li>Includes efficient algorithm for element removal</li>
+</ul>
+</li>
+<li>Vladimir Kostyukov&rsquo;s <a href="https://github.com/vkostyukov/scalacaster/blob/master/src/heap/StandardHeap.scala">source code</a>
+<ul>
+<li>Scala source code for their own implementation.</li>
+</ul>
+</li>
+</ol>
+<p>Thank you Paul and Vladimir for such great source material.</p>
+<h2 id="heap-sort">Heap Sort</h2>
+<p>Heap sort uses the properties of Heaps to sort an array.</p>
+<p>It works as follows:</p>
+<ol>
+<li>Place all elements of array into a heap</li>
+<li>Repeatedly remove the root element of the heap and insert it into the array</li>
+</ol>
+<p>The <em>Heap Property</em> ensures that the resulting array is in sorted order.</p>
+<h2 id="implementation">Implementation</h2>
+<p>To start the implementation of heap sort, we will need an efficient heap.
+This will be represented by a module with schema in Elixir.</p>
+<h3 id="the-heap-data-structure">The heap data structure</h3>
+<p>With the house-keeping out of the way let&rsquo;s introduce the heap data structure.</p>
+<p>There are two properties that a Heap has:</p>
+<ol>
+<li><strong>Shape Property:</strong> Heaps are <em>complete binary trees</em>. Meaning all levels, except possibly the
+last one, are fully filled and all nodes are filled from left to right.</li>
+<li><strong>Heap Property:</strong> The key stored in each node is either greater than or equal to (<em>max-heap</em>) or less than or
+equal to (<em>min-heap</em>) the keys in the node&rsquo;s children</li>
+</ol>
+<p>Some other useful properties are:</p>
+<ol>
+<li>The left child index of a node in an array representation of a heap is given
+by <code>2*i</code> where <code>i</code> is the index of the node in the array.</li>
+<li>The right child index of a node in an array representation of a heap is given
+by <code>2*i + 1</code> where <code>i</code> is the index of the node in the array.</li>
+<li>The maximum number of nodes in a complete binary tree is <code>2^(h) - 1</code> where
+<code>h</code> is the height of the tree. A tree of only a root node has a height of <code>0</code>.</li>
+</ol>
+<h3 id="code">Code</h3>
+<p>This implementation of a heap will be recursive.
+Meaning each node in the heap will itself be a heap.</p>
+<p>In the heap we will want to track several things:</p>
+<ol>
+<li>The <strong>value</strong> of the heap</li>
+<li>The <strong>size</strong> of the heap, ie: the number of nodes in the heap</li>
+<li>The <strong>height</strong> of the heap, ie: the largest number of edges from a leaf to
+the node.</li>
+<li>The <strong>left child</strong> of the heap</li>
+<li>The <strong>right child</strong> of the heap</li>
+</ol>
+<p>To start this implementation, lets configure a struct that will represent a
+<code>Heap</code>.</p>
+<p>The struct will define the supported fields, with some sensible defaults for
+empty heaps, as well as a <em>typespec</em>.</p>
+<p>In an empty Heap, the value and children will be <code>nil</code> and the <code>height</code> and
+<code>size</code> will be <code>0</code>.</p>
+<p>The typespec for the Heap will type the <code>value</code> as an integer for simplicities'
+sake.</p>
+<p>We will also add a simple function called <code>new</code> that will return a new <code>Heap</code>
+for us.
+While not necessary, it&rsquo;s a nice to have.</p>
+<p>With this in mind we get:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-elixir" data-lang="elixir"><span class="kd">defmodule</span> <span class="nc">ElixirImpl.DataStructure.Heap</span> <span class="k">do</span>
+  <span class="na">@moduledoc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  A functional implementation of the heap data structure.
+</span><span class="sh">  &#34;&#34;&#34;</span>
+
+  <span class="kd">defstruct</span>
+  <span class="ss">value</span><span class="p">:</span> <span class="no">nil</span><span class="p">,</span>
+  <span class="ss">left</span><span class="p">:</span> <span class="no">nil</span><span class="p">,</span>
+  <span class="ss">size</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="ss">height</span><span class="p">:</span> <span class="mi">0</span>
+
+  <span class="na">@type</span> <span class="n">t</span> <span class="o">::</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{</span>
+          <span class="ss">value</span><span class="p">:</span> <span class="n">integer</span><span class="p">()</span> <span class="o">|</span> <span class="no">nil</span>
+          <span class="ss">left</span><span class="p">:</span> <span class="n">t</span><span class="p">()</span> <span class="o">|</span> <span class="no">nil</span><span class="p">,</span>
+          <span class="ss">right</span><span class="p">:</span> <span class="n">t</span><span class="p">()</span> <span class="o">|</span> <span class="no">nil</span><span class="p">,</span>
+          <span class="ss">size</span><span class="p">:</span> <span class="n">integer</span><span class="p">(),</span>
+          <span class="ss">height</span><span class="p">:</span> <span class="n">integer</span><span class="p">(),</span>
+  <span class="p">}</span>
+
+  <span class="na">@doc</span> <span class="sh">&#34;&#34;&#34;
+</span><span class="sh">  Builds a new Heap
+</span><span class="sh">  &#34;&#34;&#34;</span>
+  <span class="na">@spec</span> <span class="n">new</span><span class="p">()</span> <span class="o">::</span> <span class="n">t</span><span class="p">()</span>
+  <span class="kd">def</span> <span class="n">new</span><span class="p">,</span> <span class="ss">do</span><span class="p">:</span> <span class="err">%</span><span class="n">__MODULE__</span><span class="p">{}</span>
+<span class="k">end</span>
+</code></pre></div><h2 id="conclusion">Conclusion</h2>
+<p>There was a lot of theory covered in this post.
+Covering this theory will be extremely useful when the <code>insert</code> and <code>removal</code>
+procedures are implemented.
+For each of those operations we will leverage the Heap&rsquo;s properties to make sure
+we implement each operation in <code>O(log(n))</code> time while also maintaining the heap
+properties at each step.</p>
+<p>Once that is complete, heapsort will be trivial to implement and we will have
+worst case running time of <code>O(log(n))</code> ensured.
+implement heapsort.</p>
+<p>In the next post, we will implement the <code>O(log(n))</code> insertion of elements. Stay
+tuned until then!</p>
 ]]></content></item><item><title>Max Subarray in Elixir</title><link>https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/</link><pubDate>Thu, 20 May 2021 21:00:50 -0600</pubDate><guid>https://www.samuelwillis.dev/posts/max-contiguous-sum-in-elixir/</guid><description>The maximum subarray problem is defined as follows:
 Given an array A find a nonempty, contiguous subarray of A whose values have the largest sum.
 It&amp;rsquo;s an interesting little problem that benefits greatly from the use of a divide and conquer algorithm as the runtime goes from O(n^2) for the brute force method to O(nlog(n)) for the divide and conquer method.
@@ -424,7 +424,7 @@ With this split any contiguous subarray must land in one of three places:</p>
 It is not in-depth at all and I would recommend looking elsewhere for more complete analysis.
 This is based off the <a href="https://en.wikipedia.org/wiki/Introduction_to_Algorithms">CLRS Algorithms book</a> analysis and is a very condensed summary.</p>
 <p>Since the array is split in half for each recursive call and the base cases are <code>O(1)</code>, the recursion equation is</p>
-<pre><code>T(n) = O(1) if n=1
+<pre tabindex="0"><code>T(n) = O(1) if n=1
      = 2T(n/2) + O(n) if n &gt; 1
 </code></pre><p>Meaning that the <a href="https://www.programiz.com/dsa/master-theorem">Master Theorem</a> can be applied to solve the equation and the runtime is <code>O(nlog(n))</code>.</p>
 <h2 id="implementation">Implementation</h2>
@@ -771,7 +771,7 @@ The main being that appending to lists can be an expensive operation in Elixir.<
 <p>But first, the queue operations.</p>
 <h2 id="operations">Operations</h2>
 <p>Formally, all the operations for Queues are:</p>
-<pre><code>Enqueue(Q, x)
+<pre tabindex="0"><code>Enqueue(Q, x)
   if Queue-Full(Q) throw Overflow Error
 
   Q[Q.tail] = x
@@ -935,7 +935,7 @@ matching</a>.</p>
 <p>Formally, the operations for a Stack are <strong>push</strong>, <strong>pop</strong>, <strong>empty</strong>, and <strong>full</strong>.
 They typically include checks for <em>overflow errors</em> (pushing to a full stack) and
 <em>underflow errors</em> (popping from an empty stack).</p>
-<pre><code>Push(S, x)
+<pre tabindex="0"><code>Push(S, x)
   if Full(S) throw Overflow Error
   S[++S.top] = x
 
